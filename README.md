@@ -3,7 +3,7 @@
 
 # GPA: One Model for Speech Recognition, Text-to-Speech, and Voice Conversion
 
-[![ArXiv](https://img.shields.io/badge/ArXiv-Coming%20Soon-inactive?style=for-the-badge&logo=arxiv)](https://arxiv.org/) [![Demo](https://img.shields.io/badge/Demo-GitHub%20Pages-blue?style=for-the-badge&logo=github)](https://github.io/placeholder) [![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Models-yellow?style=for-the-badge)](https://huggingface.co/AutoArk-AI/GPA) [![Interactive Demo](https://img.shields.io/badge/🎮%20Interactive%20Demo-AutoArk-blue?style=for-the-badge)](https://demo.autoark.com) [![ModelScope](https://img.shields.io/badge/🤖%20ModelScope-Models-purple?style=for-the-badge)](https://modelscope.cn/placeholder)
+[![ArXiv](https://img.shields.io/badge/ArXiv-Coming%20Soon-inactive?style=for-the-badge&logo=arxiv)](https://arxiv.org/) [![Demo](https://img.shields.io/badge/Demo-GitHub%20Pages-blue?style=for-the-badge&logo=github)](https://autoark.github.io/GPA/) [![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Models-yellow?style=for-the-badge)](https://huggingface.co/AutoArk-AI/GPA) [![Interactive Demo(Coming Sonn)](https://img.shields.io/badge/🎮%20Interactive%20Demo-AutoArk-blue?style=for-the-badge)](https://demo.autoark.com) [![ModelScope](https://img.shields.io/badge/🤖%20ModelScope-Models-purple?style=for-the-badge)](https://www.modelscope.cn/models/AutoArk/GPA)
 
 </div>
 
@@ -124,7 +124,7 @@ Before running inference, please download the model checkpoints from Hugging Fac
 
 | Model | Hugging Face | ModelScope |
 | :--- | :---: | :---: |
-| **GPA-0.3B-preview** | [Download](https://huggingface.co/AutoArk-AI/GPA) | [Download](https://modelscope.cn/placeholder) |
+| **GPA-0.3B-preview** | [Download](https://huggingface.co/AutoArk-AI/GPA) | [Download](https://www.modelscope.cn/models/AutoArk/GPA) |
 | **GPA-0.3B** | Coming Soon | Coming Soon |
 
 > **Important**: After downloading the checkpoints, please verify that your model directory structure matches the hierarchy below. 
