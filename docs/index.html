@@ -1,0 +1,935 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPA: General Purpose Audio</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --accent-color: #3498db;
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --light-gray: #f8f9fa;
+            --border-color: #e9ecef;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: var(--bg-color);
+        }
+
+        /* Header Section */
+        header {
+            text-align: center;
+            margin-bottom: 50px;
+            padding-top: 40px;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            color: var(--primary-color);
+            font-weight: 700;
+        }
+
+        .authors {
+            font-size: 1.1rem;
+            color: #555;
+            margin-bottom: 5px;
+        }
+
+        .affiliations {
+            font-size: 0.95rem;
+            color: #777;
+            font-style: italic;
+            margin-bottom: 20px;
+        }
+
+        .links {
+            margin-top: 15px;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 8px 16px;
+            margin: 0 5px;
+            background-color: var(--primary-color);
+            color: white;
+            text-decoration: none;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            transition: background-color 0.3s;
+        }
+
+        .btn:hover {
+            background-color: var(--accent-color);
+        }
+
+        .btn i {
+            margin-right: 5px;
+        }
+
+        /* Abstract */
+        /* Top Section Layout */
+        .top-section-container {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 40px;
+            align-items: stretch;
+        }
+
+        @media (max-width: 768px) {
+            .top-section-container {
+                flex-direction: column;
+            }
+        }
+
+        /* Abstract */
+        .abstract-container {
+            background-color: var(--light-gray);
+            padding: 30px;
+            border-radius: 8px;
+            border-left: 5px solid var(--primary-color);
+            flex: 1;
+            text-align: justify;
+        }
+
+        .abstract-title {
+            font-weight: bold;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+            display: block;
+            color: var(--primary-color);
+        }
+
+        /* Table of Contents */
+        .toc {
+            background-color: #fff;
+            border: 1px solid var(--border-color);
+            padding: 20px 30px;
+            border-radius: 8px;
+            text-align: left;
+            min-width: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .toc a {
+            display: block;
+            margin: 6px 0;
+            text-decoration: none;
+            color: var(--primary-color);
+            font-weight: 300;
+            font-style: italic;
+            font-size: 1.0rem;
+        }
+
+        .toc a:hover {
+            color: var(--accent-color);
+            text-decoration: underline;
+        }
+
+        /* Sections */
+        section {
+            margin-bottom: 60px;
+            scroll-margin-top: 20px;
+        }
+
+        h2 {
+            font-size: 1.8rem;
+            border-bottom: 2px solid var(--border-color);
+            padding-bottom: 10px;
+            margin-bottom: 25px;
+            color: var(--primary-color);
+        }
+
+        h3 {
+            font-size: 1.4rem;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            color: #444;
+        }
+
+        /* Model Overview */
+        .figure-container {
+            text-align: center;
+            margin: 30px 0;
+        }
+
+        .figure-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .caption {
+            text-align: left;
+            max-width: 800px;   /* 可选，增强可读性 */
+            margin: 0.6em auto; /* 保持整体居中，但文字左对齐 */
+            line-height: 1.5;
+        }
+
+        /* Tables for Demos */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+        }
+
+        th, td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        th {
+            background-color: var(--light-gray);
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+
+        tr:hover {
+            background-color: #f1f1f1;
+        }
+
+        audio {
+            width: 250px;
+            height: 35px;
+        }
+
+        .text-cell {
+            min-width: 200px;
+            max-width: 400px;
+        }
+
+        .attr-tag {
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            margin-right: 5px;
+            margin-bottom: 2px;
+            background-color: #e3f2fd;
+            color: #1565c0;
+            border: 1px solid #bbdefb;
+        }
+
+        /* Evaluation Table Styles */
+        .benchmark-table {
+            border-collapse: collapse;
+            width: 100%;
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .benchmark-table thead th {
+            background: #f3f4f6;
+            font-weight: 600;
+            font-size: 13px;
+            text-align: center;
+            padding: 10px 8px;
+            border: 1px solid #e5e7eb;
+            white-space: nowrap;
+        }
+        .benchmark-table tbody td {
+            font-size: 13px;
+            padding: 8px 8px;
+            border: 1px solid #e5e7eb;
+            text-align: center;
+        }
+        .benchmark-table tbody tr:nth-child(even) {
+            background: #fafafa;
+        }
+        .benchmark-table td.model {
+            text-align: left;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        .up { color: #047857; }
+        .down { color: #b91c1c; }
+        .benchmark-table caption {
+            caption-side: bottom;
+            text-align: left;
+            font-size: 12px;
+            color: #6b7280;
+            padding-top: 8px;
+        }
+
+        /* Ethics */
+        .ethics-box {
+            background-color: #fff3cd;
+            border: 1px solid #ffeeba;
+            color: #856404;
+            padding: 20px;
+            border-radius: 8px;
+        }
+
+        /* Highlights */
+        .highlights-box {
+            background-color: #f0f7ff;
+            border-left: 5px solid var(--accent-color);
+            padding: 20px;
+            margin-top: 30px;
+            border-radius: 4px;
+        }
+        
+        .highlights-title {
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+            display: block;
+            font-size: 1.1rem;
+        }
+
+        .highlights-list {
+            list-style-type: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .highlights-list li {
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .highlights-list li::before {
+            content: "•";
+            color: var(--accent-color);
+            font-weight: bold;
+            position: absolute;
+            left: 0;
+        }
+
+        .gpa-pun {
+            margin-top: 15px;
+            font-style: italic;
+            color: #666;
+            font-size: 0.95rem;
+            border-top: 1px solid #dae1e7;
+            padding-top: 10px;
+        }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            margin-top: 80px;
+            padding: 40px 0;
+            border-top: 1px solid var(--border-color);
+            color: #777;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>GPA: One Model for Speech Recognition, Text-to-Speech, and Voice Conversion</h1>
+        <div class="authors">
+            AutoArk-AI
+        </div>
+        <!-- <div class="affiliations">
+            AutoArk-AI
+        </div> -->
+        <div class="links">
+            <a href="https://arxiv.org/" class="btn"><i class="fas fa-file-pdf"></i> Paper</a>
+            <a href="https://github.com/AutoArk/GPA" class="btn"><i class="fab fa-github"></i> Code</a>
+            <a href="https://huggingface.co/spaces" class="btn"><i class="fas fa-laptop-code"></i> Demo</a>
+        </div>
+    </header>
+
+    <div class="top-section-container">
+    <div class="abstract-container">
+        <span class="abstract-title">Abstract</span>
+
+        <p>
+            Traditional speech systems typically rely on separate, task-specific models for
+            text-to-speech (TTS), automatic speech recognition (ASR), and voice conversion (VC),
+            resulting in fragmented pipelines that limit scalability, efficiency, and cross-task
+            generalization.
+        </p>
+
+        <p>
+            We present <strong>General Purpose Audio (GPA)</strong>,
+            a unified audio foundation model that integrates multiple core speech tasks within a
+            single large language model (LLM) architecture.
+            GPA operates on a shared discrete audio token space and supports instruction-driven task
+            induction, enabling a single autoregressive model to flexibly perform TTS, ASR, and VC
+            without architectural modifications.
+        </p>
+
+        <p>
+            This unified design combines a fully autoregressive formulation over discrete speech
+            tokens, joint multi-task training across speech domains, and a scalable inference
+            pipeline that achieves high concurrency and throughput.
+            The resulting model family supports efficient multi-scale deployment, including a
+            lightweight 0.3B-parameter variant optimized for edge and resource-constrained
+            environments.
+            Together, these design choices demonstrate that a unified autoregressive architecture
+            can achieve competitive performance across diverse speech tasks while remaining viable
+            for low-latency, practical deployment.
+        </p>
+    </div>
+
+    <div class="toc">
+        <a href="#model-overview">Model Overview</a>
+        <a href="#demo">Demo</a>
+        <div style="margin-left: 15px;">
+            <a href="#asr">ASR</a>
+            <a href="#tts-a">TTS</a>
+            <a href="#vc">VC</a>
+        </div>
+        <a href="#evaluation">Evaluation</a>
+        <a href="#performance">Performance</a>
+        <a href="#ethics">Ethics Statement</a>
+    </div>
+    </div>
+
+    <section id="model-overview">
+        <h2>Model Overview</h2>
+        <div class="figure-container">
+            <!-- Placeholder image path relative to docs/ -->
+            <img src="GPA.png" alt="GPA Model Architecture" width="80%">
+            <div class="caption" style="text-align: justify; width: 100%; margin: 10px auto; text-indent: 2em;">
+                <strong>Figure 1: Architecture of the proposed GPA framework.</strong> The model utilizes a shared Large Language Model (LLM) backbone to unify three core audio tasks: Understanding (ASR), Generation (TTS), and Editing (Voice Conversion). Depending on the task, the model processes different combinations of inputs (Source Audio, Target Text, or Reference Audio) via Semantic and Acoustic modules to generate the corresponding text or audio output.
+            </div>
+        </div>
+
+        <h3>Key Points</h3>
+        <ul>
+            <li style="margin-bottom: 20px;">
+                <strong>Unified Audio Token Space</strong><br>
+                GPA operates on a shared discrete audio token space that unifies TTS, ASR, and VC under a single LLM backbone, reducing cross-task fragmentation and enabling effective multi-task audio modeling.
+            </li>
+
+            <li style="margin-bottom: 20px;">
+                <strong>Instruction-Driven Task Induction</strong><br>
+                Task behavior is induced via textual instructions rather than task-specific output heads, allowing dynamic switching between TTS, ASR, and VC without architectural changes or retraining, and supporting strong zero-shot generalization.
+            </li>
+
+            <li style="margin-bottom: 20px;">
+                <strong>Edge-First Architecture Design</strong><br>
+                GPA prioritizes deployment efficiency, with a 0.3B model optimized for edge and consumer hardware, while larger variants are used to validate scalability.
+            </li>
+
+            <li style="margin-bottom: 20px;">
+                <strong>Comprehensive Framework Support</strong><br>
+                GPA supports multiple inference frameworks, including vLLM, llama.cpp, SGLang, Torch, and MLX-LM for cloud/server deployment, as well as RKNN for edge devices.
+            </li>
+        </ul>
+        <div class="gpa-pun">
+            📚 Much like an academic GPA reflects capability across subjects, our model aims for decent results across all audio tasks.
+        </div>
+    </section>
+
+
+        <section id="demo">
+        <h2>Demo</h2>
+
+        <div id="tts-a" style="margin-bottom: 40px;">
+            <h3>TTS: Zero-Shot Voice Cloning</h3>
+        <p>Synthesizing speech from text while cloning the timbre of a reference audio sample.</p>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Reference Audio</th>
+                        <th>Input Text</th>
+                        <th>Generated Audio</th>
+                    </tr>
+                </thead>
+                <tbody id="tts-tbody">
+                    <!-- Dynamic content will be loaded here via JS -->
+                </tbody>
+            </table>
+        </div>
+        </div>
+
+        <div id="vc" style="margin-bottom: 40px;">
+            <h3>Voice Conversion (VC)</h3>
+        <p>Converting the voice of a source audio to match the timbre of a reference audio while preserving content.</p>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>Source Audio</th>
+                        <th>Reference Audio</th>
+                        <th>Converted Audio</th>
+                    </tr>
+                </thead>
+                <tbody id="vc-tbody">
+                    <!-- Dynamic content will be loaded here via JS -->
+                </tbody>
+            </table>
+        </div>
+        </div>
+    </section>
+
+    <section id="performance">
+        <h2>Model Performance</h2>
+
+        <p>The following results are obtained by benchmarking services instantiated via <a href="https://github.com/AutoArk/GPA">the official deployment scripts</a>, reflecting end-to-end performance in realistic serving scenarios rather than offline inference.</p>
+        Among currently available open-source systems, <strong>our model is one of the few that natively supports both concurrent and streaming inference, while achieving performance comparable to the first tier of existing approaches. </strong>
+        <h3>TTS Streaming Benchmark (Latency & Throughput)</h3>
+
+        <h4>Table 1. TTS Streaming RTF and Audio Duration</h4>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="text-align: right;">Concurrency</th>
+                        <th style="text-align: right;">Avg TTFC (ms)</th>
+                        <th style="text-align: right;">P50 TTFC (ms)</th>
+                        <th style="text-align: right;">P99 TTFC (ms)</th>
+                        <th style="text-align: right;">Avg RTF</th>
+                        <th style="text-align: right;">P50 RTF</th>
+                        <th style="text-align: right;">P99 RTF</th>
+                        <th style="text-align: right;">Audio Dur (s)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td style="text-align: right;">1</td><td style="text-align: right;">258.8</td><td style="text-align: right;">258.8</td><td style="text-align: right;">258.8</td><td style="text-align: right;">0.197</td><td style="text-align: right;">0.197</td><td style="text-align: right;">0.197</td><td style="text-align: right;">6.44</td></tr>
+                    <tr><td style="text-align: right;">5</td><td style="text-align: right;">385.0</td><td style="text-align: right;">394.7</td><td style="text-align: right;">396.2</td><td style="text-align: right;">0.218</td><td style="text-align: right;">0.217</td><td style="text-align: right;">0.248</td><td style="text-align: right;">6.76</td></tr>
+                    <tr><td style="text-align: right;">10</td><td style="text-align: right;">544.6</td><td style="text-align: right;">564.2</td><td style="text-align: right;">566.7</td><td style="text-align: right;">0.282</td><td style="text-align: right;">0.301</td><td style="text-align: right;">0.313</td><td style="text-align: right;">6.49</td></tr>
+                    <tr><td style="text-align: right;">20</td><td style="text-align: right;">977.8</td><td style="text-align: right;">977.9</td><td style="text-align: right;">982.9</td><td style="text-align: right;">0.470</td><td style="text-align: right;">0.490</td><td style="text-align: right;">0.538</td><td style="text-align: right;">7.19</td></tr>
+                    <tr><td style="text-align: right;">40</td><td style="text-align: right;">1797.0</td><td style="text-align: right;">1736.4</td><td style="text-align: right;">2564.5</td><td style="text-align: right;">0.421</td><td style="text-align: right;">0.400</td><td style="text-align: right;">0.587</td><td style="text-align: right;">6.33</td></tr>
+                    <tr><td style="text-align: right;">80</td><td style="text-align: right;">3786.4</td><td style="text-align: right;">4054.4</td><td style="text-align: right;">5415.8</td><td style="text-align: right;">0.763</td><td style="text-align: right;">0.763</td><td style="text-align: right;">1.096</td><td style="text-align: right;">6.32</td></tr>
+                    <tr><td style="text-align: right;">160</td><td style="text-align: right;">9847.9</td><td style="text-align: right;">10239.9</td><td style="text-align: right;">14350.3</td><td style="text-align: right;">1.718</td><td style="text-align: right;">1.740</td><td style="text-align: right;">2.577</td><td style="text-align: right;">6.44</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>ASR Streaming Benchmark</h3>
+
+        <h4>Table 2. ASR Streaming Latency vs Concurrency</h4>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th style="text-align: right;">Concurrency</th>
+                        <th style="text-align: right;">Avg TTFT (ms)</th>
+                        <th style="text-align: right;">P50 TTFT (ms)</th>
+                        <th style="text-align: right;">P99 TTFT (ms)</th>
+                        <th style="text-align: right;">Avg Total (ms)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><td style="text-align: right;">1</td><td style="text-align: right;">157.5</td><td style="text-align: right;">157.5</td><td style="text-align: right;">157.5</td><td style="text-align: right;">190.9</td></tr>
+                    <tr><td style="text-align: right;">5</td><td style="text-align: right;">394.1</td><td style="text-align: right;">393.7</td><td style="text-align: right;">395.9</td><td style="text-align: right;">400.0</td></tr>
+                    <tr><td style="text-align: right;">10</td><td style="text-align: right;">589.6</td><td style="text-align: right;">721.3</td><td style="text-align: right;">723.3</td><td style="text-align: right;">598.1</td></tr>
+                    <tr><td style="text-align: right;">20</td><td style="text-align: right;">1316.3</td><td style="text-align: right;">1495.6</td><td style="text-align: right;">1500.4</td><td style="text-align: right;">1317.8</td></tr>
+                    <tr><td style="text-align: right;">40</td><td style="text-align: right;">2690.9</td><td style="text-align: right;">2678.3</td><td style="text-align: right;">2861.4</td><td style="text-align: right;">2693.7</td></tr>
+                    <tr><td style="text-align: right;">80</td><td style="text-align: right;">3833.4</td><td style="text-align: right;">3961.3</td><td style="text-align: right;">4027.0</td><td style="text-align: right;">3845.1</td></tr>
+                    <tr><td style="text-align: right;">160</td><td style="text-align: right;">5037.0</td><td style="text-align: right;">5689.3</td><td style="text-align: right;">6676.0</td><td style="text-align: right;">5044.0</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <h3>Metrics Definition</h3>
+        <ul>
+            <li><strong>TTFC</strong>: Time To First Chunk (TTS)</li>
+            <li><strong>TTFT</strong>: Time To First Token (ASR)</li>
+            <li><strong>RTF</strong>: Real-Time Factor (audio duration / synthesis time)</li>
+        </ul>
+    </section>
+
+        <section id="evaluation">
+        <h2>Model Evaluation Results</h2>
+        <h3>TTS Evaluation Table</h3>
+        <div class="table-container">
+        <table class="benchmark-table">
+        <thead>
+            <tr>
+            <th rowspan="2">Model</th>
+            <th rowspan="2">Open-Source</th>
+            <th rowspan="2">Model Size</th>
+            <th colspan="2">SEED-zh</th>
+            <th colspan="2">SEED-en</th>
+            </tr>
+            <tr>
+            <th>CER (%) <span class="down">↓</span></th>
+            <th>Speaker Similarity (%) <span class="up">↑</span></th>
+            <th>WER (%) <span class="down">↓</span></th>
+            <th>Speaker Similarity (%) <span class="up">↑</span></th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td colspan="7" style="background-color: #f9f9f9; font-weight: bold; text-align: left;">Multi-Stage or NAR Methods</td></tr>
+            <tr>
+            <td class="model">Human</td>
+            <td>-</td>
+            <td>-</td>
+            <td>1.26</td>
+            <td>75.5</td>
+            <td>2.14</td>
+            <td>73.4</td>
+            </tr>
+            <tr>
+            <td class="model">Seed-TTS</td>
+            <td>❌</td>
+            <td>-</td>
+            <td>1.12</td>
+            <td><strong>79.6</strong></td>
+            <td>2.25</td>
+            <td><strong>76.2</strong></td>
+            </tr>
+            <tr>
+            <td class="model">MiniMax-Speech</td>
+            <td>❌</td>
+            <td>-</td>
+            <td>0.83</td>
+            <td>78.3</td>
+            <td>1.65</td>
+            <td>69.2</td>
+            </tr>
+            <tr>
+            <td class="model">F5-TTS</td>
+            <td>✅</td>
+            <td>0.3B</td>
+            <td>1.52</td>
+            <td>74.1</td>
+            <td>2.00</td>
+            <td>64.7</td>
+            </tr>
+            <tr>
+            <td class="model">CosyVoice2</td>
+            <td>✅</td>
+            <td>0.5B</td>
+            <td>1.45</td>
+            <td>75.7</td>
+            <td>2.57</td>
+            <td>65.9</td>
+            </tr>
+            <tr>
+            <td class="model">FireRedTTS2</td>
+            <td>✅</td>
+            <td>1.5B</td>
+            <td>1.14</td>
+            <td>73.2</td>
+            <td>1.95</td>
+            <td>66.5</td>
+            </tr>
+            <tr>
+            <td class="model">Index-TTS2</td>
+            <td>✅</td>
+            <td>1.5B</td>
+            <td>1.03</td>
+            <td>76.5</td>
+            <td>2.23</td>
+            <td>70.6</td>
+            </tr>
+            <tr>
+            <td class="model">VibeVoice-1.5B</td>
+            <td>✅</td>
+            <td>1.5B</td>
+            <td>1.16</td>
+            <td>74.4</td>
+            <td>3.04</td>
+            <td>68.9</td>
+            </tr>
+            <tr>
+            <td class="model">VibeVoice-Realtime</td>
+            <td>✅</td>
+            <td>0.5B</td>
+            <td>-</td>
+            <td>-</td>
+            <td>2.05</td>
+            <td>63.3</td>
+            </tr>
+            <tr>
+            <td class="model">HiggsAudio-v2</td>
+            <td>✅</td>
+            <td>3B</td>
+            <td>1.50</td>
+            <td>74.0</td>
+            <td>2.44</td>
+            <td>67.7</td>
+            </tr>
+            <tr>
+            <td class="model">VoxCPM</td>
+            <td>✅</td>
+            <td>0.5B</td>
+            <td>0.93</td>
+            <td>77.2</td>
+            <td>1.85</td>
+            <td>72.9</td>
+            </tr>
+            <tr>
+            <td class="model">GLM-TTS</td>
+            <td>✅</td>
+            <td>1.5B</td>
+            <td>1.03</td>
+            <td>76.1</td>
+            <td>-</td>
+            <td>-</td>
+            </tr>
+            <tr>
+            <td class="model">GLM-TTS RL</td>
+            <td>✅</td>
+            <td>1.5B</td>
+            <td>0.89</td>
+            <td>76.4</td>
+            <td>-</td>
+            <td>-</td>
+            </tr>
+            <tr>
+            <td class="model">Fun-CosyVoice3-0.5B-2512</td>
+            <td>✅</td>
+            <td>0.5B</td>
+            <td>1.21</td>
+            <td>78.0</td>
+            <td>2.24</td>
+            <td>71.8</td>
+            </tr>
+            <tr>
+            <td class="model">Fun-CosyVoice3-0.5B-2512_RL</td>
+            <td>✅</td>
+            <td>0.5B</td>
+            <td>0.81</td>
+            <td>77.4</td>
+            <td>1.68</td>
+            <td>69.5</td>
+            </tr>
+            <tr><td colspan="7" style="background-color: #f9f9f9; font-weight: bold; text-align: left;">One-Stage AR Methods</td></tr>
+            <tr>
+            <td class="model">Spark TTS</td>
+            <td>✅</td>
+            <td>0.5B</td>
+            <td>1.20</td>
+            <td>66.0</td>
+            <td>1.98</td>
+            <td>57.3</td>
+            </tr>
+            <tr>
+            <td class="model">GPA-0.3B</td>
+            <td>✅</td>
+            <td>0.3B</td>
+            <td><strong>0.95</strong></td>
+            <td>65.9</td>
+            <td><strong>1.51</strong></td>
+            <td>56.5</td>
+            </tr>
+        </tbody>
+        <caption>
+            ↓ Lower is better &nbsp;&nbsp; ↑ Higher is better
+        </caption>
+        </table>
+        </div>
+
+        <h3>ASR Evaluation Table</h3>
+        <div class="table-container">
+        <table class="benchmark-table">
+        <thead>
+            <tr>
+            <th>Model</th>
+            <th>Params</th>
+            <th>Librispeech test-clean (WER↓)</th>
+            <th>AISHELL-1 (CER↓)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td colspan="4" style="background-color: #f9f9f9; font-weight: bold; text-align: left;">Models with &lt; 0.5B parameters</td></tr>
+            <tr>
+            <td class="model">Whisper-S</td>
+            <td>0.24B</td>
+            <td>3.13</td>
+            <td>-</td>
+            </tr>
+            <tr>
+            <td class="model">GPA-0.3B</td>
+            <td>0.3B</td>
+            <td>8.88</td>
+            <td>4.50</td>
+            </tr>
+            <tr><td colspan="4" style="background-color: #f9f9f9; font-weight: bold; text-align: left;">Models with &ge; 0.5B parameters</td></tr>
+            <tr>
+            <td class="model">Fun-ASR-nano</td>
+            <td>0.8B</td>
+            <td>1.76</td>
+            <td>1.80</td>
+            </tr>
+            <tr>
+            <td class="model">FireRed-ASR</td>
+            <td>1.1B</td>
+            <td>1.84</td>
+            <td>0.54</td>
+            </tr>
+            <tr>
+            <td class="model">GLM-ASR-nano</td>
+            <td>1.5B</td>
+            <td>2.00</td>
+            <td>1.81</td>
+            </tr>
+            <tr>
+            <td class="model">GLM-ASR-nano*</td>
+            <td>1.5B</td>
+            <td>2.17</td>
+            <td>2.17</td>
+            </tr>
+            <tr>
+            <td class="model">Whisper-L</td>
+            <td>1.55B</td>
+            <td>1.82</td>
+            <td>4.72</td>
+            </tr>
+            <tr>
+            <td class="model">Kimi-Audio</td>
+            <td>-</td>
+            <td>1.32</td>
+            <td>0.71</td>
+            </tr>
+            <tr>
+            <td class="model">Step-Audio2</td>
+            <td>-</td>
+            <td>1.17</td>
+            <td>0.63</td>
+            </tr>
+            <tr>
+            <td class="model">Seed-ASR</td>
+            <td>-</td>
+            <td>1.58</td>
+            <td>0.68</td>
+            </tr>
+            <tr>
+            <td class="model">Seed-ASR*</td>
+            <td>-</td>
+            <td>2.80</td>
+            <td>1.63</td>
+            </tr>
+            <tr>
+            <td class="model">Fun-ASR</td>
+            <td>7.7B</td>
+            <td>1.51</td>
+            <td>1.22</td>
+            </tr>
+        </tbody>
+        <caption>
+            ASR results on Librispeech and Aishell-1.
+        </caption>
+        </table>
+        </tbody>
+        <caption>
+            ASR results on Librispeech, Wenetspeech, and Aishell-1. <br>
+            WER (%) is reported for Librispeech, and CER (%) is reported for Wenetspeech and Aishell-1.
+        </caption>
+        </table>
+        </div>
+    </section>
+
+    <section id="ethics">
+        <h2>Ethics Statement</h2>
+        <div class="ethics-box">
+            <p>
+                The GPA model possesses advanced capabilities in voice cloning and speech synthesis. While these features have significant potential for positive applications in accessibility, entertainment, and education, we acknowledge the risk of misuse, such as deepfake generation or voice spoofing.
+            </p>
+            <p>
+                We are committed to responsible AI development. The released models are intended for academic research and personal educational use only. We have implemented watermarking techniques in the generated audio to aid in detection. Users are strictly prohibited from using this technology for illegal purposes, including but not limited to fraud, defamation, or impersonation without consent. By using this software, you agree to adhere to these ethical guidelines.
+            </p>
+        </div>
+    </section>
+
+    <footer>
+        <p>&copy; 2025 GPA Team. All rights reserved.</p>
+        <p>Project page template inspired by academic conference websites.</p>
+    </footer>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", async function() {
+            // Configuration: Max number of folders to probe
+            const MAX_PROBES = 20;
+
+            // Helper to pad numbers (1 -> "01")
+            const pad = (num) => num.toString().padStart(2, '0');
+
+            // --- TTS Loading Logic ---
+            const ttsTbody = document.getElementById('tts-tbody');
+
+            for (let i = 1; i <= MAX_PROBES; i++) {
+                const id = pad(i);
+                const basePath = `audio/tts/${id}`;
+                const textUrl = `${basePath}/text`;
+
+                try {
+                    // Try to fetch the text file to check if the directory exists
+                    const response = await fetch(textUrl);
+                    if (response.ok) {
+                        const textContent = await response.text();
+                        
+                        // If text exists, we assume the audio files exist too
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td><audio controls src="${basePath}/prompt.wav"></audio></td>
+                            <td class="text-cell">${textContent}</td>
+                            <td><audio controls src="${basePath}/gpa.wav"></audio></td>
+                        `;
+                        ttsTbody.appendChild(tr);
+                    } else {
+                        // 404 Not Found - Folder likely doesn't exist
+                        // We continue to next iteration in case of gaps (e.g. 01, 03 exists but 02 missing)
+                        // If you want to stop at the first missing folder, uncomment the break below:
+                        // break; 
+                    }
+                } catch (error) {
+                    console.log(`Probe failed for TTS case ${id}:`, error);
+                }
+            }
+
+            // --- VC Loading Logic ---
+            const vcTbody = document.getElementById('vc-tbody');
+
+            for (let i = 1; i <= MAX_PROBES; i++) {
+                const id = pad(i);
+                const basePath = `audio/vc/${id}`;
+                // Usage gpa.wav as the probe file since VC doesn't have a text file
+                const probeUrl = `${basePath}/gpa.wav`;
+
+                try {
+                    // Use HEAD request for efficiency if server supports it, otherwise GET
+                    // For static hosting like GitHub Pages, simple fetch (GET) is safer
+                    const response = await fetch(probeUrl, { method: 'HEAD' });
+                    
+                    if (response.ok) {
+                        const tr = document.createElement('tr');
+                        tr.innerHTML = `
+                            <td><audio controls src="${basePath}/src.wav"></audio></td>
+                            <td><audio controls src="${basePath}/ref.wav"></audio></td>
+                            <td><audio controls src="${basePath}/gpa.wav"></audio></td>
+                        `;
+                        vcTbody.appendChild(tr);
+                    }
+                } catch (error) {
+                    // If HEAD fails (e.g. 405 Method Not Allowed), retry with GET
+                     try {
+                        const response = await fetch(probeUrl);
+                        if (response.ok) {
+                             const tr = document.createElement('tr');
+                             tr.innerHTML = `
+                                 <td><audio controls src="${basePath}/src.wav"></audio></td>
+                                 <td><audio controls src="${basePath}/ref.wav"></audio></td>
+                                 <td><audio controls src="${basePath}/gpa.wav"></audio></td>
+                             `;
+                             vcTbody.appendChild(tr);
+                        }
+                    } catch (retryError) {
+                        console.log(`Probe failed for VC case ${id}`);
+                    }
+                }
+            }
+        });
+    </script>
+
+</body>
+</html>

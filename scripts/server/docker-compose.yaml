@@ -1,0 +1,40 @@
+services:
+  gpa:
+    build:
+      dockerfile: ${GPA_CODE_ROOT}/scripts/server/dockerfile
+      context: ${GPA_CODE_ROOT}
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 8
+              capabilities: [gpu]
+    ports:
+      - "8020:8000"  # Allow external port to be configurable
+    environment:
+      # Graphics card settings
+      - CUDA_VISIBLE_DEVICES=0
+      - REFERENCE_BANK_ROOT=${GPA_CODE_ROOT}
+      
+      # Path related (concatenated using GPA_MODEL_DIR)
+      - GPA_MODEL_PATH=${GPA_MODEL_DIR}
+      - BICODEC_PATH=${GPA_MODEL_DIR}/BiCodec
+      - GLM_TOKENIZER_PATH=${GPA_MODEL_DIR}/glm-4-voice-tokenizer
+      - TEXT_TOKENIZER_PATH=${GPA_MODEL_DIR}
+      
+      # Service related
+      - GPA_BACKEND=vllm        # Optional: vllm, torch, sglang
+      - GPA_GPU_UTIL=0.7       # vllm GPU memory utilization
+      
+    volumes:
+      - ${GPA_CODE_ROOT}:${GPA_CODE_ROOT}
+      - ${GPA_MODEL_DIR}:${GPA_MODEL_DIR}
+    command: >
+      bash -c "cd ${GPA_CODE_ROOT}/scripts/server && python3 gpa_server.py
+      --model_path $${GPA_MODEL_PATH}
+      --bicodec_path $${BICODEC_PATH}
+      --glm_path $${GLM_TOKENIZER_PATH}
+      --text_tokenizer_path $${TEXT_TOKENIZER_PATH}
+      --backend $${GPA_BACKEND}
+      --llm_gpu_memory_utilization $${GPA_GPU_UTIL}"

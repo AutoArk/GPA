@@ -1,0 +1,27 @@
+# Core dependencies (platform-agnostic)
+loguru
+torch>=2.1.0
+torchaudio
+torchcodec
+transformers>=4.57.0
+accelerate
+datasets
+peft
+
+numpy
+scipy
+sentencepiece
+protobuf
+tiktoken
+
+librosa
+soundfile
+soxr
+
+einops
+einx
+omegaconf
+safetensors
+
+tqdm
+requests
