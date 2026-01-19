@@ -3,7 +3,7 @@
 
 # GPA: One Model for Speech Recognition, Text-to-Speech, and Voice Conversion
 
-[![ArXiv](https://img.shields.io/badge/ArXiv-Coming%20Soon-inactive?style=for-the-badge&logo=arxiv)](https://arxiv.org/) [![Demo](https://img.shields.io/badge/Demo-GitHub%20Pages-blue?style=for-the-badge&logo=github)](https://autoark.github.io/GPA/) [![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Models-yellow?style=for-the-badge)](https://huggingface.co/AutoArk-AI/GPA) [![Interactive Demo](https://img.shields.io/badge/🎮%20Interactive%20Demo-Coming%20Soon-blue?style=for-the-badge)](https://demo.autoark.com) [![ModelScope](https://img.shields.io/badge/🤖%20ModelScope-Models-purple?style=for-the-badge)](https://www.modelscope.cn/models/AutoArk/GPA)
+[![ArXiv](https://img.shields.io/badge/ArXiv-2601.10770-b31b1b?style=for-the-badge&logo=arxiv)](https://arxiv.org/abs/2601.10770) [![Demo](https://img.shields.io/badge/Demo-GitHub%20Pages-blue?style=for-the-badge&logo=github)](https://autoark.github.io/GPA/) [![Hugging Face](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Models-yellow?style=for-the-badge)](https://huggingface.co/AutoArk-AI/GPA) [![Interactive Demo](https://img.shields.io/badge/🎮%20Interactive%20Demo-Coming%20Soon-blue?style=for-the-badge)](https://demo.autoark.com) [![ModelScope](https://img.shields.io/badge/🤖%20ModelScope-Models-purple?style=for-the-badge)](https://www.modelscope.cn/models/AutoArk/GPA)
 
 </div>
 
@@ -38,8 +38,8 @@ Similarly, our GPA model unifies the three major pillars of audio tasks—Text-t
 | | Inference Scripts (STT, TTS, VC) | ✅ |
 | | Training Pipeline (DeepSpeed) | ✅ |
 | | Interactive Demo | ✅ |
-| | Basic Service Deployment (vLLM/FastAPI) | ✅ |
-| | Paper (ArXiv) | ⬜ |
+| Basic Service Deployment (vLLM/FastAPI) | ✅ |
+| Paper (ArXiv) | ✅ |
 | **Model Releases** | **GPA-0.3B-preview** (Edge-focused) | ✅ |
 | | **GPA-0.3B** (Edge-focused) | ⬜ |
 | **Edge Deployment** | Android Platform | ⬜ |
@@ -426,10 +426,13 @@ We borrowed a lot of code from the following excellent projects:
 If you find GPA useful for your research or projects, please cite us:
 
 ```bibtex
-@misc{gpa2026,
-  title={Unifying Speech Recognition, Synthesis and Conversion with Autoregressive Transformer},
-  author={Runyuan Cai, Yu Lin, Yiming Wang, Chunlin Fu and Xiaodong Zeng},
-  year={2026},
-  howpublished={\url{https://github.com/AutoArk/GPA}},
+@misc{cai2026unifyingspeechrecognitionsynthesis,
+      title={Unifying Speech Recognition, Synthesis and Conversion with Autoregressive Transformers}, 
+      author={Runyuan Cai and Yu Lin and Yiming Wang and Chunlin Fu and Xiaodong Zeng},
+      year={2026},
+      eprint={2601.10770},
+      archivePrefix={arXiv},
+      primaryClass={cs.SD},
+      url={https://arxiv.org/abs/2601.10770}, 
 }
 ```
