@@ -191,6 +191,13 @@ class GPAInference:
         print("\n--- Voice Conversion (VC) ---")
         output_path = os.path.join(self.output_dir, output_filename)
 
+        kwargs = {
+            "max_new_tokens": 512,
+            "temperature": 0.2,
+            "repetition_penalty": 1.2,
+            "do_sample": True,
+        }
+
         inputs = self.processor.process_input(
             task="vc",
             audio_path=source_audio_path,
