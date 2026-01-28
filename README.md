@@ -9,6 +9,8 @@
 
 > **TL;DR** GPA incorporates three speech tasks into one single model and this repo includes codes of training, fine-tuning and effecient deployment of GPA.
 
+> If you find GPA useful, a ⭐ helps support the project.
+
 ## 📖 Abstract
 
 **GPA** stands for **General Purpose Audio**. 
@@ -436,3 +438,9 @@ If you find GPA useful for your research or projects, please cite us:
       url={https://arxiv.org/abs/2601.10770}, 
 }
 ```
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=AutoArk/GPA&type=date&legend=bottom-right&width=400&height=200)](https://www.star-history.com/#AutoArk/GPA&type=date&legend=bottom-right)
+
+We thank the community for supporting this research.
