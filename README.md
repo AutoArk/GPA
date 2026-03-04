@@ -217,6 +217,35 @@ python gpa_inference.py --task tts-a \
     --text_tokenizer_path "${GPA_MODEL_DIR}"
 ```
 
+  Text-to-Speech (TTS) with reference transcript (recommended for more stable voice cloning):
+
+  ```bash
+  # Example transcript from STT + manual correction for test_audio/astro.wav
+  # "There are four computers now that already control critical vehicle functions."
+
+  uv run gpa_inference.py --task tts-a \
+    --text "Hello world, this is Major Tom speaking." \
+    --ref_audio_path "test_audio/astro.wav" \
+    --ref_transcript "There are four computers now that already control critical vehicle functions." \
+    --gpa_model_path "${GPA_MODEL_DIR}" \
+    --tokenizer_path "${GPA_MODEL_DIR}/glm-4-voice-tokenizer" \
+    --bicodec_tokenizer_path "${GPA_MODEL_DIR}/BiCodec" \
+    --text_tokenizer_path "${GPA_MODEL_DIR}"
+  ```
+
+  Or let GPA extract reference transcript automatically:
+
+  ```bash
+  uv run gpa_inference.py --task tts-a \
+    --text "Hello world, this is Major Tom speaking." \
+    --ref_audio_path "test_audio/astro.wav" \
+    --auto_ref_transcript \
+    --gpa_model_path "${GPA_MODEL_DIR}" \
+    --tokenizer_path "${GPA_MODEL_DIR}/glm-4-voice-tokenizer" \
+    --bicodec_tokenizer_path "${GPA_MODEL_DIR}/BiCodec" \
+    --text_tokenizer_path "${GPA_MODEL_DIR}"
+  ```
+
 Voice Conversion (VC):
 
 ```bash
