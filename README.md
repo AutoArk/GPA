@@ -16,6 +16,9 @@
 
 <div style="max-height: 100px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-top: 8px;">
 
+- 🔄 **2026.03.04: Inference update (TTS transcript conditioning):**
+  Added --ref_transcript support to guide generation using reference text, effectively eliminating accent drift in zero-shot tasks. (Inspired by insights from [@or965](https://github.com/AutoArk/GPA/issues/13))
+
 - 🔄 **2026.01.29: Updated the roadmap:** Our next release will be **GPA-v1.5-0.6B**! It includes incremental improvements in ASR robustness. The previously planned standalone GPA-0.3B full release is no longer scheduled.
 
 - 📌 **2026.1.17: Initial GPA release.**
@@ -175,6 +178,9 @@ cd scripts/inference
 
 > **💡Note**: To use other python environments, replace "uv run" with "path_to_your_python".
 
+> **💡Update (2026.03.04)**:
+> TTS now supports transcript-conditioned cloning via `--ref_transcript` or `--auto_ref_transcript`, this feature can help preserve accent fidelity better in zero-shot tasks.
+
 Speech-to-Text (STT/ASR):
 
 ```bash
@@ -216,6 +222,35 @@ python gpa_inference.py --task tts-a \
     --bicodec_tokenizer_path "${GPA_MODEL_DIR}/BiCodec" \
     --text_tokenizer_path "${GPA_MODEL_DIR}"
 ```
+
+  Text-to-Speech (TTS) with reference transcript (recommended for more stable voice cloning):
+
+  ```bash
+  # Example transcript from STT + manual correction for test_audio/astro.wav
+  # "There are four computers now that already control critical vehicle functions."
+
+  uv run gpa_inference.py --task tts-a \
+    --text "Hello world, this is Major Tom speaking." \
+    --ref_audio_path "test_audio/astro.wav" \
+    --ref_transcript "There are four computers now that already control critical vehicle functions." \
+    --gpa_model_path "${GPA_MODEL_DIR}" \
+    --tokenizer_path "${GPA_MODEL_DIR}/glm-4-voice-tokenizer" \
+    --bicodec_tokenizer_path "${GPA_MODEL_DIR}/BiCodec" \
+    --text_tokenizer_path "${GPA_MODEL_DIR}"
+  ```
+
+  Or let GPA extract reference transcript automatically:
+
+  ```bash
+  uv run gpa_inference.py --task tts-a \
+    --text "Hello world, this is Major Tom speaking." \
+    --ref_audio_path "test_audio/astro.wav" \
+    --auto_ref_transcript \
+    --gpa_model_path "${GPA_MODEL_DIR}" \
+    --tokenizer_path "${GPA_MODEL_DIR}/glm-4-voice-tokenizer" \
+    --bicodec_tokenizer_path "${GPA_MODEL_DIR}/BiCodec" \
+    --text_tokenizer_path "${GPA_MODEL_DIR}"
+  ```
 
 Voice Conversion (VC):
 
@@ -435,6 +470,8 @@ We borrowed a lot of code from the following excellent projects:
 - [Emilia](https://github.com/open-mmlab/Amphion/tree/main/preprocessors/Emilia)
 - [FlashTTS](https://github.com/HuiResearch/FlashTTS/tree/master/flashtts)
 - [Qwen](https://github.com/QwenLM/Qwen)
+
+Special thanks to [@or965](https://github.com/or965) for the valuable discussion and practical insight in [Issue #13](https://github.com/AutoArk/GPA/issues/13).
 
 ## 🔗 Citation
 

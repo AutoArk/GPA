@@ -113,7 +113,7 @@ class GPAInference:
         else:
             return text.replace("<|im_end|>","")
 
-    def run_tts(self, task, output_filename, text, ref_audio_path, **kwargs):
+    def run_tts(self, task, output_filename, text, ref_audio_path, ref_transcript=None, **kwargs):
         """
         gen_kwargs: dict, parameters for model.generate (temp, top_p, etc.)
         """
@@ -135,12 +135,18 @@ class GPAInference:
         print(f"\n--- {task.upper()} ---")
         output_path = os.path.join(self.output_dir, output_filename)
 
+        effective_ref_transcript = ref_transcript
+        if effective_ref_transcript:
+            print(f"Using reference transcript for TTS conditioning: {effective_ref_transcript}")
+
         # Pass processor specific args (e.g. emotion, pitch) here
         inputs = self.processor.process_input(
             task=task, 
             ref_audio_path=ref_audio_path, 
             text=text,
+            ref_transcript=effective_ref_transcript,
         )
+        prompt_semantic_len = int(inputs.get("prompt_semantic_len", 0))
 
         # Pass generation specific args (e.g. temperature) here
         # Note: Original code hardcoded temperature=0.8 for TTS, we use gen_kwargs or fallback to generate defaults
@@ -156,6 +162,9 @@ class GPAInference:
 
         audio_ids = re.findall(r"<\|bicodec_semantic_(\d+)\|>", content)
         audio_list = [int(x) for x in audio_ids]
+
+        if prompt_semantic_len > 0 and len(audio_list) > prompt_semantic_len:
+            audio_list = audio_list[prompt_semantic_len:]
 
         if ref_audio_path:
             global_tokens = self.bicodec_tokenizer.tokenize([ref_audio_path])['global_tokens']
@@ -260,6 +269,8 @@ def parse_args():
 
     # TTS Inputs (Processor Arguments)
     parser.add_argument("--text", type=str, default=None, help="Text for TTS")
+    parser.add_argument("--ref_transcript", type=str, default=None, help="Optional transcript of the reference audio for TTS conditioning")
+    parser.add_argument("--auto_ref_transcript", action="store_true", help="For TTS, run STT on reference audio and use the result as ref transcript")
 
     return parser.parse_args()
 
@@ -286,11 +297,19 @@ def main():
         print("STT Result:", result)
 
     elif args.task == "tts-a":
+        ref_transcript = args.ref_transcript
+        if args.auto_ref_transcript:
+            if not args.ref_audio_path:
+                raise ValueError("Error: --ref_audio_path is required when --auto_ref_transcript is enabled.")
+            ref_transcript = inference.run_stt(audio_path=args.ref_audio_path)
+            print(f"Auto reference transcript: {ref_transcript}")
+
         inference.run_tts(
             task="tts-a",
             output_filename="output_gpa_tts_a.wav",
             text=args.text,
             ref_audio_path=args.ref_audio_path,
+            ref_transcript=ref_transcript,
         )
 
     elif args.task == "vc":

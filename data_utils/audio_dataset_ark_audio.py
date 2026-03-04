@@ -68,24 +68,39 @@ class ark_infer_processor:
         attention_mask = [1] * (len(input_ids))
         return input_ids, attention_mask
 
-    def _process_example_tts_a(self, text: str, ref_audio_path: str):
+    def _process_example_tts_a(
+        self,
+        text: str,
+        ref_audio_path: str,
+        ref_transcript: str | None = None,
+    ):
         with torch.no_grad():
             global_tokens = self.bicodec_tokenizer.tokenize([ref_audio_path])['global_tokens']
-        all_text = "<|start_content|>" + text + "<|end_content|>"
+            ref_semantic_tokens = self.bicodec_tokenizer.tokenize([ref_audio_path])['semantic_tokens']
+
+        if ref_transcript:
+            all_text = "<|start_content|>" + ref_transcript + text + "<|end_content|>"
+        else:
+            all_text = "<|start_content|>" + text + "<|end_content|>"
+
+        ref_semantic_tokens_list = (
+            (ref_semantic_tokens + self.semantic_token_offset).cpu().tolist()[0]
+        )
         global_tokens_list = (
             (global_tokens + self.global_token_offset).cpu().tolist()[0][0]
         )
         text_tokens = self.text_tokenizer(
             all_text, truncation=True, max_length=self.max_length
         )
-        input_ids = (
-            self.text_tokenizer.encode("<|start_global_token|>")
-            + global_tokens_list
-            + self.text_tokenizer.encode("<|end_global_token|>")
-            + text_tokens["input_ids"]
-        )
+        input_ids = self.text_tokenizer.encode("<|start_global_token|>") + global_tokens_list + self.text_tokenizer.encode("<|end_global_token|>") + text_tokens["input_ids"]
+
+        prompt_semantic_len = 0
+        if ref_transcript:
+            input_ids = input_ids + self.text_tokenizer.encode("<|start_semantic_token|>") + ref_semantic_tokens_list
+            prompt_semantic_len = len(ref_semantic_tokens_list)
+
         attention_mask = [1] * len(input_ids)
-        return input_ids, attention_mask
+        return input_ids, attention_mask, prompt_semantic_len
 
     def _process_example_vc(self, audio_path: str, ref_audio_path: str):
         with torch.no_grad():
@@ -118,6 +133,7 @@ class ark_infer_processor:
         audio_path: str | None = None,
         ref_audio_path: str | None = None,
         text: str | None = None,
+        ref_transcript: str | None = None,
     ):
         """加载指定音频、特征并根据任务类型返回 token 化结果。"""
 
@@ -126,8 +142,8 @@ class ark_infer_processor:
             input_ids, attention_mask = self._process_example_stt(audio_path)
         elif task == "tts-a":
             assert ref_audio_path is not None and text is not None
-            input_ids, attention_mask = self._process_example_tts_a(
-                text, ref_audio_path
+            input_ids, attention_mask, prompt_semantic_len = self._process_example_tts_a(
+                text, ref_audio_path, ref_transcript
             )
         elif task == "vc":
             assert audio_path is not None and ref_audio_path is not None
@@ -138,10 +154,13 @@ class ark_infer_processor:
             raise ValueError(
                 f"Unsupported task: {task}, all supported tasks: {ALL_TASKS}"
             )
-        return {
+        result = {
             "input_ids": input_ids,
             "attention_mask": attention_mask,
         }
+        if task == "tts-a":
+            result["prompt_semantic_len"] = prompt_semantic_len
+        return result
 
 
 class ark_processor:
