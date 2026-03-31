@@ -1,0 +1,462 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GPA TTS Voice Studio</title>
+  <style>
+    :root {
+      --bg: #f4efe6;
+      --panel: rgba(255,250,240,0.92);
+      --ink: #1f1a17;
+      --muted: #6f6258;
+      --line: #d8c8b7;
+      --accent: #b2552d;
+      --accent-2: #1d6b64;
+      --accent-3: #7b4f96;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "Avenir Next", "Helvetica Neue", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, #f9d9b5 0, transparent 28%),
+        radial-gradient(circle at bottom right, #b9dfd9 0, transparent 24%),
+        linear-gradient(135deg, #efe6da 0%, #f8f3eb 100%);
+      min-height: 100vh;
+    }
+    .wrap {
+      max-width: 1240px;
+      margin: 0 auto;
+      padding: 28px 20px 40px;
+    }
+    .hero h1 {
+      margin: 0 0 8px;
+      font-size: 34px;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+    }
+    .hero p {
+      margin: 0;
+      color: var(--muted);
+      max-width: 900px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1.3fr 1fr 0.9fr;
+      gap: 18px;
+      margin-top: 20px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 16px 40px rgba(40, 26, 16, 0.08);
+      backdrop-filter: blur(8px);
+    }
+    h2 {
+      margin: 0 0 14px;
+      font-size: 20px;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    textarea, input, select {
+      width: 100%;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #fffdf8;
+      padding: 12px 14px;
+      font: inherit;
+      color: var(--ink);
+    }
+    textarea {
+      min-height: 180px;
+      resize: vertical;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .stack { display: grid; gap: 12px; }
+    .actions {
+      display: flex;
+      gap: 12px;
+      margin-top: 16px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      background: var(--accent);
+      color: white;
+    }
+    button.secondary { background: var(--accent-2); }
+    button.tertiary { background: var(--accent-3); }
+    button:disabled { opacity: 0.6; cursor: wait; }
+    .status { color: var(--muted); font-size: 14px; }
+    .metric {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fffdf8;
+      margin-bottom: 10px;
+    }
+    .metric .k { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; }
+    .metric .v { margin-top: 4px; font-size: 24px; font-weight: 700; }
+    .sub { color: var(--muted); font-size: 13px; }
+    .voice-list {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fffdf8;
+      padding: 10px;
+      min-height: 220px;
+      overflow: auto;
+    }
+    .voice-item {
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      margin-bottom: 8px;
+      background: rgba(178, 85, 45, 0.06);
+    }
+    .voice-item.default {
+      background: rgba(29, 107, 100, 0.09);
+      border-color: rgba(29, 107, 100, 0.18);
+    }
+    .voice-item .name { font-weight: 700; }
+    .voice-item .meta { color: var(--muted); font-size: 12px; margin-top: 4px; }
+    audio { width: 100%; margin-top: 14px; }
+    pre {
+      white-space: pre-wrap;
+      word-break: break-word;
+      font-size: 12px;
+      color: var(--muted);
+      background: #fffdf8;
+      border: 1px solid var(--line);
+      padding: 12px;
+      border-radius: 12px;
+      min-height: 160px;
+    }
+    @media (max-width: 1100px) {
+      .grid { grid-template-columns: 1fr; }
+      .row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <h1>GPA TTS Voice Studio</h1>
+      <p>The service keeps Qwen INT4 and the INT8 detokenizer resident. During voice registration it loads the Spark tokenizer on demand, converts reference audio into global tokens offline, and switches voices by name at inference time.</p>
+    </div>
+    <div class="grid">
+      <section class="panel">
+        <h2>Speech Generation</h2>
+        <label for="voiceSelect">Voice</label>
+        <select id="voiceSelect"></select>
+        <div class="row">
+          <div>
+            <label for="temperature">Temperature</label>
+            <input id="temperature" type="number" min="0" max="2" step="0.1" value="0.3" />
+          </div>
+          <div>
+            <label for="repetition">Repetition Penalty</label>
+            <input id="repetition" type="number" min="0.5" max="3" step="0.1" value="1.2" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="max_new_tokens">Max New Tokens</label>
+            <input id="max_new_tokens" type="number" min="32" max="2048" step="1" value="512" />
+          </div>
+          <div>
+            <label for="do_sample">Sampling</label>
+            <input id="do_sample" type="text" value="false" readonly />
+          </div>
+        </div>
+        <label for="text" style="margin-top: 12px;">Input Text</label>
+        <textarea id="text">Hello, this is a test.</textarea>
+        <div class="actions">
+          <button id="runBtn">Generate Speech</button>
+          <button id="refreshBtn" class="secondary" type="button">Refresh Status</button>
+          <span class="status" id="ttsStatus">Waiting for request</span>
+        </div>
+        <audio id="player" controls></audio>
+      </section>
+
+      <section class="panel">
+        <h2>Voice Registration</h2>
+        <div class="stack">
+          <div>
+            <label for="voiceName">Voice Name</label>
+            <input id="voiceName" type="text" placeholder="For example: linyu-demo" />
+          </div>
+          <div>
+            <label for="voiceFile">Upload Reference Audio</label>
+            <input id="voiceFile" type="file" accept="audio/*,.wav,.mp3,.m4a,.flac" />
+          </div>
+          <div class="actions">
+            <button id="uploadBtn" class="tertiary" type="button">Upload and Register</button>
+            <span class="status" id="registerStatus">Waiting for registration</span>
+          </div>
+          <div>
+            <label for="voicePath">Or enter a local audio path on the server</label>
+            <input id="voicePath" type="text" placeholder="./reference_audio/xxx.wav" />
+          </div>
+          <div class="actions">
+            <button id="pathBtn" class="secondary" type="button">Register from Path</button>
+          </div>
+        </div>
+
+        <h2 style="margin-top: 22px;">Registered Voices</h2>
+        <div class="voice-list" id="voiceList"></div>
+      </section>
+
+      <aside class="panel">
+        <div class="metric">
+          <div class="k">Service RSS</div>
+          <div class="v" id="rssNow">-</div>
+          <div class="sub">Current resident memory of the service process</div>
+        </div>
+        <div class="metric">
+          <div class="k">Service Peak RSS</div>
+          <div class="v" id="rssPeak">-</div>
+          <div class="sub">Peak usage across the service lifetime</div>
+        </div>
+        <div class="metric">
+          <div class="k">Last Operation Peak</div>
+          <div class="v" id="reqPeak">-</div>
+          <div class="sub">Peak usage for the most recent registration or inference</div>
+        </div>
+        <div class="metric">
+          <div class="k">Tokenizer Loaded</div>
+          <div class="v" id="tokenizerLoaded">-</div>
+          <div class="sub">On-demand loading state for the registration pipeline</div>
+        </div>
+        <div class="metric">
+          <div class="k">Voice Count</div>
+          <div class="v" id="voiceCount">-</div>
+          <div class="sub">Number of voices currently available</div>
+        </div>
+        <pre id="details">Waiting for request results...</pre>
+      </aside>
+    </div>
+  </div>
+  <script>
+    const fmtBytes = (value) => {
+      if (value == null) return "-";
+      const units = ["B", "KB", "MB", "GB", "TB"];
+      let n = Number(value);
+      let idx = 0;
+      while (n >= 1024 && idx < units.length - 1) {
+        n /= 1024;
+        idx += 1;
+      }
+      return `${n.toFixed(2)} ${units[idx]}`;
+    };
+
+    const els = {
+      voiceSelect: document.getElementById("voiceSelect"),
+      voiceList: document.getElementById("voiceList"),
+      voiceName: document.getElementById("voiceName"),
+      voiceFile: document.getElementById("voiceFile"),
+      voicePath: document.getElementById("voicePath"),
+      text: document.getElementById("text"),
+      temperature: document.getElementById("temperature"),
+      repetition: document.getElementById("repetition"),
+      maxNewTokens: document.getElementById("max_new_tokens"),
+      runBtn: document.getElementById("runBtn"),
+      refreshBtn: document.getElementById("refreshBtn"),
+      uploadBtn: document.getElementById("uploadBtn"),
+      pathBtn: document.getElementById("pathBtn"),
+      ttsStatus: document.getElementById("ttsStatus"),
+      registerStatus: document.getElementById("registerStatus"),
+      player: document.getElementById("player"),
+      rssNow: document.getElementById("rssNow"),
+      rssPeak: document.getElementById("rssPeak"),
+      reqPeak: document.getElementById("reqPeak"),
+      tokenizerLoaded: document.getElementById("tokenizerLoaded"),
+      voiceCount: document.getElementById("voiceCount"),
+      details: document.getElementById("details"),
+    };
+
+    function renderVoices(voices) {
+      els.voiceSelect.innerHTML = "";
+      els.voiceList.innerHTML = "";
+      for (const voice of voices) {
+        const option = document.createElement("option");
+        option.value = voice.name;
+        option.textContent = voice.is_default ? `${voice.name} (default)` : voice.name;
+        els.voiceSelect.appendChild(option);
+
+        const item = document.createElement("div");
+        item.className = `voice-item${voice.is_default ? " default" : ""}`;
+        item.innerHTML = `
+          <div class="name">${voice.is_default ? "Default Voice · " : ""}${voice.name}</div>
+          <div class="meta">Source: ${voice.source_kind || "-"} / ${voice.source_label || "-"}</div>
+          <div class="meta">Updated: ${voice.updated_at || voice.created_at || "-"}</div>
+        `;
+        els.voiceList.appendChild(item);
+      }
+      els.voiceCount.textContent = String(voices.length);
+    }
+
+    function updateMemory(memory) {
+      els.rssNow.textContent = fmtBytes(memory.rss_bytes);
+      els.rssPeak.textContent = fmtBytes(memory.peak_rss_bytes);
+      els.tokenizerLoaded.textContent = memory.registration_tokenizer_loaded ? "YES" : "NO";
+      els.voiceCount.textContent = String(memory.registered_voice_count ?? 0);
+    }
+
+    async function refreshState() {
+      try {
+        const [memoryRes, voicesRes] = await Promise.all([
+          fetch("/api/memory"),
+          fetch("/api/voices"),
+        ]);
+        const memory = await memoryRes.json();
+        const voicesPayload = await voicesRes.json();
+        updateMemory(memory);
+        if (voicesPayload.ok) {
+          const current = els.voiceSelect.value;
+          renderVoices(voicesPayload.voices || []);
+          if ([...els.voiceSelect.options].some((opt) => opt.value === current)) {
+            els.voiceSelect.value = current;
+          }
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    }
+
+    async function runTTS() {
+      els.runBtn.disabled = true;
+      els.ttsStatus.textContent = "Generating...";
+      try {
+        const payload = {
+          text: els.text.value,
+          voice_name: els.voiceSelect.value,
+          temperature: Number(els.temperature.value),
+          repetition_penalty: Number(els.repetition.value),
+          max_new_tokens: Number(els.maxNewTokens.value),
+          do_sample: false,
+        };
+        const res = await fetch("/api/tts", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          throw new Error(data.detail || "TTS request failed");
+        }
+        els.player.src = `${data.audio_url}?t=${Date.now()}`;
+        els.reqPeak.textContent = fmtBytes(data.result.peak_rss_bytes);
+        updateMemory(data.service_memory);
+        els.details.textContent = JSON.stringify(data, null, 2);
+        els.ttsStatus.textContent = "Generation complete";
+      } catch (err) {
+        els.ttsStatus.textContent = "Generation failed";
+        els.details.textContent = String(err);
+      } finally {
+        els.runBtn.disabled = false;
+      }
+    }
+
+    async function registerByUpload() {
+      if (!els.voiceName.value.trim()) {
+        els.registerStatus.textContent = "Enter a voice name first";
+        return;
+      }
+      if (!els.voiceFile.files.length) {
+        els.registerStatus.textContent = "Choose an audio file first";
+        return;
+      }
+      els.uploadBtn.disabled = true;
+      els.registerStatus.textContent = "Uploading and registering...";
+      try {
+        const form = new FormData();
+        form.append("name", els.voiceName.value.trim());
+        form.append("overwrite", "false");
+        form.append("audio", els.voiceFile.files[0]);
+        const res = await fetch("/api/voices/register-upload", { method: "POST", body: form });
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          throw new Error(data.detail || "register upload failed");
+        }
+        renderVoices(data.voices || []);
+        els.voiceSelect.value = data.voice.name;
+        els.reqPeak.textContent = fmtBytes(data.result.peak_rss_bytes);
+        updateMemory(data.service_memory);
+        els.details.textContent = JSON.stringify(data, null, 2);
+        els.registerStatus.textContent = `Registration complete: ${data.voice.name}`;
+      } catch (err) {
+        els.registerStatus.textContent = "Registration failed";
+        els.details.textContent = String(err);
+      } finally {
+        els.uploadBtn.disabled = false;
+      }
+    }
+
+    async function registerByPath() {
+      if (!els.voiceName.value.trim()) {
+        els.registerStatus.textContent = "Enter a voice name first";
+        return;
+      }
+      if (!els.voicePath.value.trim()) {
+        els.registerStatus.textContent = "Enter an audio path first";
+        return;
+      }
+      els.pathBtn.disabled = true;
+      els.registerStatus.textContent = "Registering from path...";
+      try {
+        const payload = {
+          name: els.voiceName.value.trim(),
+          audio_path: els.voicePath.value.trim(),
+          overwrite: false,
+        };
+        const res = await fetch("/api/voices/register-path", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          throw new Error(data.detail || "register path failed");
+        }
+        renderVoices(data.voices || []);
+        els.voiceSelect.value = data.voice.name;
+        els.reqPeak.textContent = fmtBytes(data.result.peak_rss_bytes);
+        updateMemory(data.service_memory);
+        els.details.textContent = JSON.stringify(data, null, 2);
+        els.registerStatus.textContent = `Registration complete: ${data.voice.name}`;
+      } catch (err) {
+        els.registerStatus.textContent = "Registration failed";
+        els.details.textContent = String(err);
+      } finally {
+        els.pathBtn.disabled = false;
+      }
+    }
+
+    els.runBtn.addEventListener("click", runTTS);
+    els.refreshBtn.addEventListener("click", refreshState);
+    els.uploadBtn.addEventListener("click", registerByUpload);
+    els.pathBtn.addEventListener("click", registerByPath);
+    refreshState();
+    setInterval(refreshState, 3000);
+  </script>
+</body>
+</html>

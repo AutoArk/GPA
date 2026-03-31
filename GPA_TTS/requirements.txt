@@ -1,0 +1,15 @@
+numpy>=2.0.0
+onnxruntime>=1.20.0
+onnxruntime-genai>=0.10.0
+psutil>=7.0.0
+soundfile>=0.13.0
+fastapi>=0.115.0
+uvicorn>=0.30.0
+python-multipart>=0.0.9
+safetensors>=0.5.0
+PyYAML>=6.0.0
+omegaconf>=2.3.0
+loguru>=0.7.2
+transformers>=4.51.0
+torch>=2.4.0
+torchaudio>=2.4.0
