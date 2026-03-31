@@ -16,6 +16,9 @@
 
 <div style="max-height: 100px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-top: 8px;">
 
+- 🆕 **2026.03.31: [GPA-TTS](GPA_TTS/) — Standalone lightweight TTS runtime released!**
+  Extracted from GPA with INT8/INT4 quantization for edge deployment. Among the smallest open-source TTS runtimes with voice cloning support! [Details →](GPA_TTS/README.md)
+
 - 🔄 **2026.03.04: Inference update (TTS transcript conditioning):**
   Added --ref_transcript support to guide generation using reference text, effectively eliminating accent drift in zero-shot tasks. (Inspired by insights from [@or965](https://github.com/AutoArk/GPA/issues/13))
 
@@ -60,6 +63,7 @@ Similarly, our GPA model unifies the three major pillars of audio tasks—Text-t
 | Paper (ArXiv) | ✅ |
 | **Model Releases** | **GPA-0.3B-preview** (Edge-focused) | ✅ |
 | | **GPA-v1.5-0.6B** (Edge-focused) | ⬜ |
+| | **[GPA-TTS](GPA_TTS/)** — Lightweight TTS runtime (INT8/INT4 ONNX) | ✅ |
 | **Edge Deployment** | Android Platform | ⬜ |
 | | RK Series | ⬜ |
 | | IOS Platform | ⬜ |
@@ -69,6 +73,23 @@ Similarly, our GPA model unifies the three major pillars of audio tasks—Text-t
 | | torch | ✅ |
 | | mlx-lm | ✅ |
 | | rknn | ⬜ |
+
+## 🎙️ GPA-TTS: Edge-Ready Voice-Cloning TTS
+
+We noticed that **TTS is by far the most popular feature** in our online demo. While GPA-v1.5 will ship as a larger unified model, we extracted the TTS component into a standalone, self-contained runtime:
+
+<div align="center">
+
+| | GPA-TTS |
+| :--- | :--- |
+| **Quantization** | Qwen INT4 + Detokenizer INT8 (ONNX Runtime) |
+| **Voice Cloning** | Zero-shot, from a short reference audio |
+| **Footprint** | Among the smallest open-source TTS runtimes with cloning support |
+| **Optimized for** | Local CPU inference (Mac / Linux / Edge) |
+
+**[📖 GPA-TTS README →](GPA_TTS/README.md)** &nbsp;&nbsp;|&nbsp;&nbsp; **[🤗 Download from HuggingFace](https://huggingface.co/AutoArk-AI/GPA/tree/main/GPA_TTS/GPA_TTS_INT8)**
+
+</div>
 
 ## 🔍 Model Overview
 
