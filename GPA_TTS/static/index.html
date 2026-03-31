@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GPA_TTS</title>
+  <style>
+    :root {
+      --bg: #f5efe8;
+      --panel: rgba(255, 251, 244, 0.94);
+      --ink: #1f1a17;
+      --muted: #6e6257;
+      --line: #d9c9b8;
+      --accent: #ae4f28;
+      --accent-2: #1c6a63;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Avenir Next", "Helvetica Neue", "Segoe UI", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at top left, #f7d8b8 0, transparent 28%),
+        radial-gradient(circle at bottom right, #b8ddd7 0, transparent 24%),
+        linear-gradient(135deg, #efe5d9 0%, #f8f4ed 100%);
+      display: grid;
+      place-items: center;
+      padding: 24px;
+    }
+    .panel {
+      width: min(760px, 100%);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 28px;
+      box-shadow: 0 20px 48px rgba(40, 26, 16, 0.08);
+      backdrop-filter: blur(8px);
+    }
+    h1 {
+      margin: 0 0 10px;
+      font-size: 38px;
+      line-height: 1.05;
+      letter-spacing: -0.03em;
+    }
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+    .links {
+      display: grid;
+      gap: 14px;
+      margin-top: 24px;
+    }
+    a {
+      display: block;
+      padding: 16px 18px;
+      border-radius: 16px;
+      text-decoration: none;
+      color: white;
+      font-weight: 700;
+    }
+    a.cn { background: var(--accent); }
+    a.en { background: var(--accent-2); }
+    .meta {
+      margin-top: 20px;
+      font-size: 14px;
+      color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+  <main class="panel">
+    <h1>GPA_TTS</h1>
+    <p>A deployment-focused TTS runtime extracted from GPA. Choose a demo page below to test speech generation, voice registration, and service status in the browser.</p>
+    <div class="links">
+      <a class="cn" href="/static/demo_page_cn.html">Open Chinese Demo</a>
+      <a class="en" href="/static/demo_page_en.html">Open English Demo</a>
+    </div>
+    <div class="meta">API base: `/api/*` · Service root: `/` · Outputs: `/outputs/*`</div>
+  </main>
+</body>
+</html>
