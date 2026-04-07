@@ -49,6 +49,7 @@ registration_tokenizer_loaded = False
 class TTSRequest(BaseModel):
     text: str = Field(..., min_length=1, max_length=500)
     voice_name: str = Field("default", min_length=1, max_length=120)
+    decoder_precision: str = Field("int8", pattern=r"^(int8|fp16|fp32)$")
     max_new_tokens: int = Field(512, ge=32, le=2048)
     temperature: float = Field(0.3, ge=0.0, le=2.0)
     repetition_penalty: float = Field(1.2, ge=0.5, le=3.0)
@@ -245,6 +246,7 @@ def tts(request: TTSRequest) -> dict:
             text=text,
             output_path=output_path,
             global_token_path=global_token_path,
+            decoder_precision=request.decoder_precision,
             max_new_tokens=request.max_new_tokens,
             temperature=request.temperature,
             repetition_penalty=request.repetition_penalty,

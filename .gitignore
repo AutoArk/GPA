@@ -152,3 +152,9 @@ scripts/server/tmp_dir
 output_gpa
 *_[0-9]+_[0-9]+.wav
 GPA_paper/arxiv-style/
+
+# GPA_TTS model files
+GPA_TTS/model/
+GPA_TTS/voice/
+GPA_TTS/voices/
+GPA_TTS/*.wav

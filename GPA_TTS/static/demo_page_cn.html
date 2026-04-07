@@ -160,7 +160,7 @@
   <div class="wrap">
     <div class="hero">
       <h1>GPA TTS Voice Studio</h1>
-      <p>服务常驻 Qwen INT4 和 INT8 detokenizer。音色注册时按需加载 Spark tokenizer，把参考音频离线转成 global token，再在推理时按名字切换音色。</p>
+      <p>服务常驻 Qwen INT4，并按请求选择 INT8、FP16 或 FP32 decoder。音色注册时按需加载 Spark tokenizer，把参考音频离线转成 global token，再在推理时按名字切换音色。</p>
     </div>
     <div class="grid">
       <section class="panel">
@@ -183,8 +183,12 @@
             <input id="max_new_tokens" type="number" min="32" max="2048" step="1" value="512" />
           </div>
           <div>
-            <label for="do_sample">Sampling</label>
-            <input id="do_sample" type="text" value="false" readonly />
+            <label for="decoder_precision">Decoder 精度</label>
+            <select id="decoder_precision">
+              <option value="int8" selected>INT8（最小内存）</option>
+              <option value="fp16">FP16（平衡）</option>
+              <option value="fp32">FP32（最高质量）</option>
+            </select>
           </div>
         </div>
         <label for="text" style="margin-top: 12px;">输入文本</label>
@@ -278,6 +282,7 @@
       temperature: document.getElementById("temperature"),
       repetition: document.getElementById("repetition"),
       maxNewTokens: document.getElementById("max_new_tokens"),
+      decoderPrecision: document.getElementById("decoder_precision"),
       runBtn: document.getElementById("runBtn"),
       refreshBtn: document.getElementById("refreshBtn"),
       uploadBtn: document.getElementById("uploadBtn"),
@@ -349,6 +354,7 @@
         const payload = {
           text: els.text.value,
           voice_name: els.voiceSelect.value,
+          decoder_precision: els.decoderPrecision.value,
           temperature: Number(els.temperature.value),
           repetition_penalty: Number(els.repetition.value),
           max_new_tokens: Number(els.maxNewTokens.value),
