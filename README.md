@@ -16,7 +16,10 @@
 
 <div style="max-height: 100px; overflow-y: auto; border: 1px solid #ddd; padding: 10px; margin-top: 8px;">
 
-- 🆕 **2026.03.31: [GPA-TTS](GPA_TTS/) — Standalone lightweight TTS runtime released!**
+- 🆕 **2026.04.07: [GPA-TTS FP16/FP32 Decoder](GPA_TTS/) — Higher-quality decoder options now available!**
+  For users with extra compute headroom, FP16 and FP32 SparkDetokenizer decoders are now available alongside INT8, delivering more stable and higher-quality speech synthesis. Selectable at runtime via CLI, API, or Web UI. [Details →](GPA_TTS/README.md)
+
+- 📌 **2026.03.31: [GPA-TTS](GPA_TTS/) — Standalone lightweight TTS runtime released!**
   Extracted from GPA with INT8/INT4 quantization for edge deployment. Among the smallest open-source TTS runtimes with voice cloning support! [Details →](GPA_TTS/README.md)
 
 - 🔄 **2026.03.04: Inference update (TTS transcript conditioning):**
@@ -63,7 +66,7 @@ Similarly, our GPA model unifies the three major pillars of audio tasks—Text-t
 | Paper (ArXiv) | ✅ |
 | **Model Releases** | **GPA-0.3B-preview** (Edge-focused) | ✅ |
 | | **GPA-v1.5-0.6B** (Edge-focused) | ⬜ |
-| | **[GPA-TTS](GPA_TTS/)** — Lightweight TTS runtime (INT8/INT4 ONNX) | ✅ |
+| | **[GPA-TTS](GPA_TTS/)** — Lightweight TTS runtime (INT8/FP16/FP32 + INT4 ONNX) | ✅ |
 | **Edge Deployment** | Android Platform | ⬜ |
 | | RK Series | ⬜ |
 | | IOS Platform | ⬜ |
@@ -82,12 +85,13 @@ We noticed that **TTS is by far the most popular feature** in our online demo. W
 
 | | GPA-TTS |
 | :--- | :--- |
-| **Quantization** | Qwen INT4 + Detokenizer INT8 (ONNX Runtime) |
+| **Quantization** | Qwen INT4 + Detokenizer INT8 / FP16 / FP32 (ONNX Runtime) |
 | **Voice Cloning** | Zero-shot, from a short reference audio |
+| **Decoder Precision** | Selectable at runtime — INT8 (edge), FP16 (balanced), FP32 (highest quality) |
 | **Footprint** | Among the smallest open-source TTS runtimes with cloning support |
 | **Optimized for** | Local CPU inference (Mac / Linux / Edge) |
 
-**[📖 GPA-TTS README →](GPA_TTS/README.md)** &nbsp;&nbsp;|&nbsp;&nbsp; **[🤗 Download from HuggingFace](https://huggingface.co/AutoArk-AI/GPA/tree/main/GPA_TTS/GPA_TTS_INT8)**
+**[📖 GPA-TTS README →](GPA_TTS/README.md)** &nbsp;&nbsp;|&nbsp;&nbsp; **[🤗 Download from HuggingFace](https://huggingface.co/AutoArk-AI/GPA/tree/main/GPA_TTS)**
 
 </div>
 

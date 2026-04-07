@@ -106,6 +106,12 @@ def parse_args() -> argparse.Namespace:
         default=None,
         help="Override ONNX Runtime intra-op thread count.",
     )
+    parser.add_argument(
+        "--decoder-precision",
+        choices=("int8", "fp16", "fp32"),
+        default="int8",
+        help="Preferred SparkDetokenizer ONNX precision.",
+    )
     return parser.parse_args()
 
 
@@ -152,6 +158,21 @@ def create_detokenizer_session(model_path: Path, intra_op_threads: Optional[int]
         session_options.intra_op_num_threads = intra_op_threads
         session_options.inter_op_num_threads = max(1, intra_op_threads // 2)
     return ort.InferenceSession(str(model_path), sess_options=session_options, providers=["CPUExecutionProvider"])
+
+
+def pick_detokenizer_model(bundle_dir: Path, preferred_variant: str) -> Path:
+    candidates = {
+        "int8": bundle_dir / "spark_detokenizer_int8.onnx",
+        "fp16": bundle_dir / "spark_detokenizer_fp16.onnx",
+        "fp32": bundle_dir / "spark_detokenizer_fp32.onnx",
+    }
+    preferred = candidates[preferred_variant]
+    if preferred.exists():
+        return preferred
+    for path in candidates.values():
+        if path.exists():
+            return path
+    raise FileNotFoundError(f"No SparkDetokenizer ONNX artifact found in: {bundle_dir}")
 
 
 def create_qwen_generator(model, input_ids: np.ndarray, args: argparse.Namespace):
@@ -283,16 +304,24 @@ class PackagedTTSRuntime:
         )
         self.qwen_model = og.Model(str(self.bundle_dir / "qwen_int4_ort"))
         self.tokenizer = og.Tokenizer(self.qwen_model)
-        self.detok_session = create_detokenizer_session(self.bundle_dir / "spark_detokenizer_int8.onnx", intra_op_threads)
+        self.detok_sessions: dict[str, ort.InferenceSession] = {}
 
     def close(self) -> None:
-        if hasattr(self, "detok_session"):
-            del self.detok_session
+        if hasattr(self, "detok_sessions"):
+            self.detok_sessions.clear()
         if hasattr(self, "tokenizer"):
             del self.tokenizer
         if hasattr(self, "qwen_model"):
             del self.qwen_model
         gc.collect()
+
+    def get_detokenizer_session(self, decoder_precision: str) -> tuple[ort.InferenceSession, Path]:
+        model_path = pick_detokenizer_model(self.bundle_dir, decoder_precision)
+        session = self.detok_sessions.get(model_path.name)
+        if session is None:
+            session = create_detokenizer_session(model_path, self.intra_op_threads)
+            self.detok_sessions[model_path.name] = session
+        return session, model_path
 
     def load_global_tokens(self, global_token_path: Optional[Path] = None) -> np.ndarray:
         token_path = global_token_path.resolve() if global_token_path is not None else self.default_global_token_path
@@ -304,6 +333,7 @@ class PackagedTTSRuntime:
         text: str,
         output_path: Path,
         global_token_path: Optional[Path] = None,
+        decoder_precision: str = "int8",
         max_new_tokens: int = 512,
         temperature: float = 0.3,
         repetition_penalty: float = 1.2,
@@ -374,19 +404,22 @@ class PackagedTTSRuntime:
             gc.collect()
             capture_memory("after_kv_cache_release")
 
+            detok_session, detokenizer_model_path = self.get_detokenizer_session(decoder_precision)
+            apply_denoise = True
             semantic_tokens = np.asarray(audio_ids, dtype=np.int64)[np.newaxis, :]
-            audio = self.detok_session.run(
+            audio = detok_session.run(
                 None,
                 {"semantic_tokens": semantic_tokens, "global_tokens": global_tokens},
             )[0]
             audio = np.asarray(audio, dtype=np.float32).reshape(-1)
             if audio.size > 0:
                 audio = audio[: len(audio_ids) * self.manifest["latent_hop_length"]]
-                audio = postprocess_audio(audio, sample_rate=int(self.manifest["sample_rate"]))
+                if apply_denoise:
+                    audio = postprocess_audio(audio, sample_rate=int(self.manifest["sample_rate"]))
             sf.write(output_path, audio, int(self.manifest["sample_rate"]))
             capture_memory("after_detokenize")
 
-            print("Used SparkDetokenizer ONNX artifact: spark_detokenizer_int8.onnx")
+            print(f"Used SparkDetokenizer ONNX artifact: {detokenizer_model_path.name}")
             print("Denoise: enabled mode=moderate")
             print(
                 "Generation stop:"
@@ -406,6 +439,9 @@ class PackagedTTSRuntime:
                 "last_token_id": last_token_id,
                 "last_emitted_token_id": last_emitted_token_id,
                 "selected_global_token_path": str(selected_global_token_path),
+                "decoder_precision": decoder_precision,
+                "detokenizer_model": detokenizer_model_path.name,
+                "denoise_applied": apply_denoise,
                 "memory_checkpoints": memory_checkpoints,
                 "peak_rss_bytes": monitor.peak_rss,
                 "models_resident": True,
@@ -431,6 +467,7 @@ def synthesize_to_file(
     text: str,
     output_path: Path,
     global_token_path: Optional[Path] = None,
+    decoder_precision: str = "int8",
     max_new_tokens: int = 512,
     temperature: float = 0.3,
     repetition_penalty: float = 1.2,
@@ -447,6 +484,7 @@ def synthesize_to_file(
             text=text,
             output_path=output_path,
             global_token_path=global_token_path,
+            decoder_precision=decoder_precision,
             max_new_tokens=max_new_tokens,
             temperature=temperature,
             repetition_penalty=repetition_penalty,
@@ -462,6 +500,7 @@ def synthesize(args: argparse.Namespace) -> dict:
         text=args.text,
         output_path=args.output_path,
         global_token_path=args.global_token_path,
+        decoder_precision=getattr(args, "decoder_precision", "int8"),
         max_new_tokens=args.max_new_tokens,
         temperature=args.temperature,
         repetition_penalty=args.repetition_penalty,
