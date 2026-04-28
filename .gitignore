@@ -158,3 +158,13 @@ GPA_TTS/model/
 GPA_TTS/voice/
 GPA_TTS/voices/
 GPA_TTS/*.wav
+GPA_TTS/outputs/
+
+# GPA model files
+downloaded_models/
+
+# GPA 1.5 raw files
+GPA_1.5/raw/
+
+# Temporary files
+temp/
