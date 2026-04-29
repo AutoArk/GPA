@@ -1,0 +1,748 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GPA ONNX Console</title>
+  <style>
+    :root {
+      --bg: #f2efe8;
+      --panel: rgba(255, 252, 246, 0.94);
+      --ink: #161616;
+      --muted: #655f57;
+      --line: #d6cfbf;
+      --accent: #9f3d22;
+      --accent-2: #1d5c78;
+      --accent-3: #556b2f;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      font-family: "Avenir Next", "PingFang SC", "Noto Sans SC", sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(197, 121, 58, 0.22), transparent 28%),
+        radial-gradient(circle at bottom right, rgba(29, 92, 120, 0.18), transparent 24%),
+        linear-gradient(135deg, #eee8dc 0%, #f8f5ef 100%);
+    }
+    .wrap {
+      max-width: 1340px;
+      margin: 0 auto;
+      padding: 28px 20px 40px;
+    }
+    .hero {
+      display: flex;
+      justify-content: space-between;
+      gap: 16px;
+      align-items: end;
+    }
+    h1 {
+      margin: 0 0 8px;
+      font-size: 38px;
+      line-height: 1;
+      letter-spacing: -0.04em;
+    }
+    .hero p {
+      margin: 0;
+      max-width: 900px;
+      color: var(--muted);
+    }
+    .stamp {
+      padding: 10px 14px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255, 252, 246, 0.8);
+      font-size: 13px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 0.85fr;
+      gap: 18px;
+      margin-top: 22px;
+    }
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 18px;
+      box-shadow: 0 18px 38px rgba(49, 35, 18, 0.08);
+      backdrop-filter: blur(8px);
+    }
+    h2 {
+      margin: 0 0 14px;
+      font-size: 20px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    textarea, input, select {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: #fffdf8;
+      font: inherit;
+      color: var(--ink);
+    }
+    textarea {
+      min-height: 150px;
+      resize: vertical;
+    }
+    .row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-top: 12px;
+    }
+    .stack {
+      display: grid;
+      gap: 12px;
+    }
+    .actions {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-top: 16px;
+    }
+    button {
+      border: 0;
+      border-radius: 999px;
+      padding: 12px 18px;
+      font: inherit;
+      font-weight: 700;
+      cursor: pointer;
+      color: white;
+      background: var(--accent);
+    }
+    button.secondary { background: var(--accent-2); }
+    button.tertiary { background: var(--accent-3); }
+    button:disabled { opacity: 0.65; cursor: wait; }
+    .status {
+      color: var(--muted);
+      font-size: 14px;
+    }
+    .metric {
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fffdf8;
+      margin-bottom: 10px;
+    }
+    .metric .k {
+      color: var(--muted);
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .metric .v {
+      margin-top: 4px;
+      font-size: 24px;
+      font-weight: 700;
+    }
+    .sub {
+      color: var(--muted);
+      font-size: 13px;
+    }
+    .hint {
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+    .voice-list {
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      background: #fffdf8;
+      padding: 10px;
+      min-height: 180px;
+      overflow: auto;
+    }
+    .voice-item {
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid transparent;
+      margin-bottom: 8px;
+      background: rgba(159, 61, 34, 0.06);
+    }
+    .voice-item.default {
+      background: rgba(29, 92, 120, 0.09);
+      border-color: rgba(29, 92, 120, 0.18);
+    }
+    .voice-item .name { font-weight: 700; }
+    .voice-item .meta { color: var(--muted); font-size: 12px; margin-top: 4px; }
+    audio {
+      width: 100%;
+      margin-top: 14px;
+    }
+    pre {
+      margin: 0;
+      min-height: 180px;
+      padding: 12px;
+      border-radius: 12px;
+      border: 1px solid var(--line);
+      background: #fffdf8;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: var(--muted);
+      font-size: 12px;
+    }
+    @media (max-width: 1100px) {
+      .hero { display: block; }
+      .stamp { margin-top: 14px; display: inline-block; }
+      .grid { grid-template-columns: 1fr; }
+      .row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="hero">
+      <div>
+        <h1>GPA ONNX Console</h1>
+        <p>Run GPA locally with a real service, a browser UI, voice registration, TTS, ASR, and live memory metrics. Use this page to verify how the runtime behaves on your machine.</p>
+      </div>
+      <div class="stamp" id="healthStamp">Waiting for service</div>
+    </div>
+
+    <div class="grid">
+      <section class="panel">
+        <h2>Text to Speech</h2>
+        <label for="mainModelPrecision">Main Model</label>
+        <select id="mainModelPrecision"></select>
+        <label for="voiceSelect">Voice</label>
+        <select id="voiceSelect"></select>
+        <label for="ttsText" style="margin-top: 12px;">Input Text</label>
+        <textarea id="ttsText">Hello, this is a short GPA speech synthesis example.</textarea>
+        <div class="row">
+          <div>
+            <label for="ttsTemperature">Temperature</label>
+            <input id="ttsTemperature" type="number" min="0" max="2" step="0.1" value="0.1" />
+          </div>
+          <div>
+            <label for="ttsDecoder">Decoder</label>
+            <select id="ttsDecoder">
+              <option value="fp16" selected>fp16</option>
+              <option value="int8">int8</option>
+            </select>
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="ttsRepetitionPenalty">Repetition Penalty</label>
+            <input id="ttsRepetitionPenalty" type="number" min="0.5" max="3" step="0.1" value="1.5" />
+          </div>
+          <div>
+            <label for="ttsMaxTokens">Max New Tokens</label>
+            <input id="ttsMaxTokens" type="number" min="32" max="2048" step="1" value="512" />
+          </div>
+        </div>
+        <div class="actions">
+          <button id="ttsRunBtn">Generate Speech</button>
+          <button id="refreshBtn" class="secondary" type="button">Refresh Status</button>
+          <span class="status" id="ttsStatus">Waiting for request</span>
+        </div>
+        <audio id="ttsPlayer" controls></audio>
+        <div class="hint">The current asset bundle provides `fp16` and `int4` main-model variants. The default voice comes from `model/reference/default_global_tokens.npy`, and you can switch to registered voices after adding them.</div>
+      </section>
+
+      <section class="panel">
+        <h2>Voice Registration</h2>
+        <div class="stack">
+          <div>
+            <label for="voiceName">Voice Name</label>
+            <input id="voiceName" type="text" placeholder="example: sample-based-voice" />
+          </div>
+          <div>
+            <label for="voiceFile">Upload Reference Audio</label>
+            <input id="voiceFile" type="file" accept="audio/*,.wav,.mp3,.m4a,.flac" />
+            <audio id="voicePreview" controls></audio>
+          </div>
+          <div class="actions">
+            <button id="uploadBtn" class="tertiary" type="button">Register Upload</button>
+            <span class="status" id="registerStatus">Waiting for registration</span>
+          </div>
+          <div>
+            <label for="voicePath">Or enter a local server-side audio path</label>
+            <input id="voicePath" type="text" placeholder="/absolute/path/to/reference.wav" />
+          </div>
+          <div class="actions">
+            <button id="pathBtn" class="secondary" type="button">Register Path</button>
+          </div>
+        </div>
+
+        <h2 style="margin-top: 22px;">Speech to Text</h2>
+        <label>Microphone Recording</label>
+        <div class="actions" style="margin-top: 0;">
+          <button id="recordStartBtn" type="button">Start Recording</button>
+          <button id="recordStopBtn" class="tertiary" type="button" disabled>Stop Recording</button>
+          <span class="status" id="recordStatus">Waiting for recording</span>
+        </div>
+        <label for="asrFile">Upload Audio</label>
+        <input id="asrFile" type="file" accept="audio/*,.wav,.mp3,.m4a,.flac" />
+        <audio id="asrPreview" controls></audio>
+        <div class="row">
+          <div>
+            <label for="beginTime">Begin Time</label>
+            <input id="beginTime" type="number" step="0.1" value="-1" />
+          </div>
+          <div>
+            <label for="endTime">End Time</label>
+            <input id="endTime" type="number" step="0.1" value="-1" />
+          </div>
+        </div>
+        <div class="row">
+          <div>
+            <label for="maxAudioSeconds">Max Audio Seconds</label>
+            <input id="maxAudioSeconds" type="number" min="1" max="120" step="1" value="30" />
+          </div>
+          <div>
+            <label for="asrMaxTokens">Max New Tokens</label>
+            <input id="asrMaxTokens" type="number" min="32" max="1024" step="1" value="256" />
+          </div>
+        </div>
+        <div class="actions">
+          <button id="asrRunBtn" class="secondary">Transcribe Audio</button>
+          <button id="loadSampleBtn" class="tertiary" type="button">Load Bundled Sample</button>
+          <span class="status" id="asrStatus">Waiting for request</span>
+        </div>
+        <label for="asrText" style="margin-top: 16px;">Transcription</label>
+        <textarea id="asrText" readonly></textarea>
+        <div class="hint">Uploaded or recorded audio stays playable in the page so you can compare the waveform and the ASR output side by side.</div>
+      </section>
+
+      <aside class="panel">
+        <div class="metric">
+          <div class="k">Service RSS</div>
+          <div class="v" id="rssNow">-</div>
+          <div class="sub">Current resident set size of the service process</div>
+        </div>
+        <div class="metric">
+          <div class="k">Service Peak RSS</div>
+          <div class="v" id="rssPeak">-</div>
+          <div class="sub">Peak resident memory across the service lifetime</div>
+        </div>
+        <div class="metric">
+          <div class="k">Last Request Peak</div>
+          <div class="v" id="reqPeak">-</div>
+          <div class="sub">Peak memory of the latest registration, ASR, or TTS request</div>
+        </div>
+        <div class="metric">
+          <div class="k">Runtime Loaded</div>
+          <div class="v" id="runtimeLoaded">-</div>
+          <div class="sub">Whether the ONNX runtime is currently loaded</div>
+        </div>
+        <div class="metric">
+          <div class="k">Voice Count</div>
+          <div class="v" id="voiceCount">-</div>
+          <div class="sub">Number of currently registered voices</div>
+        </div>
+        <div class="metric">
+          <div class="k">TTS Text Tokenizer</div>
+          <div class="v" id="ttsTokenizerMode">-</div>
+          <div class="sub">Current TTS text-tokenization mode</div>
+        </div>
+        <div class="metric">
+          <div class="k">Registration Tokenizer</div>
+          <div class="v" id="tokenizerLoaded">-</div>
+          <div class="sub">Whether the voice-registration tokenizer is loaded</div>
+        </div>
+        <div class="voice-list" id="voiceList"></div>
+        <pre id="details">Waiting for request details...</pre>
+      </aside>
+    </div>
+  </div>
+
+  <script>
+    const fmtBytes = (value) => {
+      if (value == null) return "-";
+      const units = ["B", "KB", "MB", "GB", "TB"];
+      let n = Number(value);
+      let idx = 0;
+      while (n >= 1024 && idx < units.length - 1) {
+        n /= 1024;
+        idx += 1;
+      }
+      return `${n.toFixed(2)} ${units[idx]}`;
+    };
+
+    const els = {
+      healthStamp: document.getElementById("healthStamp"),
+      mainModelPrecision: document.getElementById("mainModelPrecision"),
+      voiceSelect: document.getElementById("voiceSelect"),
+      voiceList: document.getElementById("voiceList"),
+      voiceName: document.getElementById("voiceName"),
+      voiceFile: document.getElementById("voiceFile"),
+      voicePath: document.getElementById("voicePath"),
+      voicePreview: document.getElementById("voicePreview"),
+      ttsText: document.getElementById("ttsText"),
+      ttsTemperature: document.getElementById("ttsTemperature"),
+      ttsRepetitionPenalty: document.getElementById("ttsRepetitionPenalty"),
+      ttsDecoder: document.getElementById("ttsDecoder"),
+      ttsMaxTokens: document.getElementById("ttsMaxTokens"),
+      ttsRunBtn: document.getElementById("ttsRunBtn"),
+      refreshBtn: document.getElementById("refreshBtn"),
+      uploadBtn: document.getElementById("uploadBtn"),
+      pathBtn: document.getElementById("pathBtn"),
+      ttsStatus: document.getElementById("ttsStatus"),
+      registerStatus: document.getElementById("registerStatus"),
+      ttsPlayer: document.getElementById("ttsPlayer"),
+      asrFile: document.getElementById("asrFile"),
+      asrPreview: document.getElementById("asrPreview"),
+      recordStartBtn: document.getElementById("recordStartBtn"),
+      recordStopBtn: document.getElementById("recordStopBtn"),
+      recordStatus: document.getElementById("recordStatus"),
+      beginTime: document.getElementById("beginTime"),
+      endTime: document.getElementById("endTime"),
+      maxAudioSeconds: document.getElementById("maxAudioSeconds"),
+      asrMaxTokens: document.getElementById("asrMaxTokens"),
+      asrRunBtn: document.getElementById("asrRunBtn"),
+      loadSampleBtn: document.getElementById("loadSampleBtn"),
+      asrStatus: document.getElementById("asrStatus"),
+      asrText: document.getElementById("asrText"),
+      rssNow: document.getElementById("rssNow"),
+      rssPeak: document.getElementById("rssPeak"),
+      reqPeak: document.getElementById("reqPeak"),
+      runtimeLoaded: document.getElementById("runtimeLoaded"),
+      voiceCount: document.getElementById("voiceCount"),
+      ttsTokenizerMode: document.getElementById("ttsTokenizerMode"),
+      tokenizerLoaded: document.getElementById("tokenizerLoaded"),
+      details: document.getElementById("details"),
+    };
+
+    let asrBlobUrl = null;
+    let recordedAsrFile = null;
+    let mediaRecorder = null;
+    let mediaStream = null;
+    let recordChunks = [];
+
+    function revokeAsrBlobUrl() {
+      if (asrBlobUrl) {
+        URL.revokeObjectURL(asrBlobUrl);
+        asrBlobUrl = null;
+      }
+    }
+
+    function setAudioPreview(input, player) {
+      const file = input.files && input.files[0];
+      if (!file) {
+        player.removeAttribute("src");
+        player.load();
+        return;
+      }
+      revokeAsrBlobUrl();
+      if (input === els.asrFile) {
+        recordedAsrFile = null;
+        els.recordStatus.textContent = "Switched to uploaded file";
+      }
+      player.src = URL.createObjectURL(file);
+    }
+
+    function setRecordedAsrBlob(blob) {
+      revokeAsrBlobUrl();
+      asrBlobUrl = URL.createObjectURL(blob);
+      recordedAsrFile = new File([blob], `mic_record_${Date.now()}.webm`, { type: blob.type || "audio/webm" });
+      els.asrPreview.src = asrBlobUrl;
+      els.recordStatus.textContent = "Recording is ready for transcription";
+      els.asrStatus.textContent = "Loaded microphone recording";
+    }
+
+    async function startRecording() {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        els.recordStatus.textContent = "This browser does not support microphone recording";
+        return;
+      }
+      try {
+        mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        recordChunks = [];
+        mediaRecorder = new MediaRecorder(mediaStream);
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data && event.data.size > 0) {
+            recordChunks.push(event.data);
+          }
+        };
+        mediaRecorder.onstop = () => {
+          const blob = new Blob(recordChunks, { type: mediaRecorder.mimeType || "audio/webm" });
+          setRecordedAsrBlob(blob);
+          if (mediaStream) {
+            for (const track of mediaStream.getTracks()) {
+              track.stop();
+            }
+          }
+          mediaStream = null;
+          mediaRecorder = null;
+          els.recordStartBtn.disabled = false;
+          els.recordStopBtn.disabled = true;
+        };
+        mediaRecorder.start();
+        recordedAsrFile = null;
+        els.recordStartBtn.disabled = true;
+        els.recordStopBtn.disabled = false;
+        els.recordStatus.textContent = "Recording...";
+      } catch (err) {
+        els.recordStatus.textContent = "Microphone access failed";
+        els.details.textContent = String(err);
+      }
+    }
+
+    function stopRecording() {
+      if (mediaRecorder && mediaRecorder.state !== "inactive") {
+        mediaRecorder.stop();
+        els.recordStatus.textContent = "Finalizing recording...";
+      }
+    }
+
+    function renderVoices(voices) {
+      const current = els.voiceSelect.value;
+      els.voiceSelect.innerHTML = "";
+      els.voiceList.innerHTML = "";
+      for (const voice of voices) {
+        const option = document.createElement("option");
+        option.value = voice.name;
+        option.textContent = voice.is_default ? `${voice.name} (default)` : voice.name;
+        els.voiceSelect.appendChild(option);
+
+        const item = document.createElement("div");
+        item.className = `voice-item${voice.is_default ? " default" : ""}`;
+        item.innerHTML = `
+          <div class="name">${voice.is_default ? "Default voice: " : ""}${voice.name}</div>
+          <div class="meta">Source: ${voice.source_kind || "-"} / ${voice.source_label || "-"}</div>
+          <div class="meta">Updated: ${voice.updated_at || voice.created_at || "-"}</div>
+        `;
+        els.voiceList.appendChild(item);
+      }
+      if ([...els.voiceSelect.options].some((opt) => opt.value === current)) {
+        els.voiceSelect.value = current;
+      }
+      els.voiceCount.textContent = String(voices.length);
+    }
+
+    function renderMainModelOptions(memory) {
+      const options = Array.isArray(memory.available_main_model_precisions)
+        ? memory.available_main_model_precisions
+        : [];
+      const current = els.mainModelPrecision.value;
+      els.mainModelPrecision.innerHTML = "";
+      for (const precision of options) {
+        const option = document.createElement("option");
+        option.value = precision;
+        option.textContent = precision;
+        els.mainModelPrecision.appendChild(option);
+      }
+      if ([...els.mainModelPrecision.options].some((opt) => opt.value === current)) {
+        els.mainModelPrecision.value = current;
+      } else if (memory.default_main_model_precision && [...els.mainModelPrecision.options].some((opt) => opt.value === memory.default_main_model_precision)) {
+        els.mainModelPrecision.value = memory.default_main_model_precision;
+      }
+    }
+
+    function updateMemory(memory) {
+      els.rssNow.textContent = fmtBytes(memory.rss_bytes);
+      els.rssPeak.textContent = fmtBytes(memory.peak_rss_bytes);
+      els.reqPeak.textContent = fmtBytes(memory.last_request_peak_rss_bytes);
+      els.runtimeLoaded.textContent = memory.runtime_loaded ? "YES" : "NO";
+      els.ttsTokenizerMode.textContent = memory.tts_text_tokenizer_mode || "-";
+      els.tokenizerLoaded.textContent = memory.registration_tokenizer_loaded ? "YES" : "NO";
+      els.voiceCount.textContent = String(memory.registered_voice_count ?? 0);
+      els.healthStamp.textContent = memory.runtime_loaded ? "Service ready" : "Service not loaded";
+      renderMainModelOptions(memory);
+    }
+
+    async function refreshState() {
+      try {
+        const [memoryRes, voicesRes] = await Promise.all([
+          fetch("/api/memory"),
+          fetch("/api/voices"),
+        ]);
+        const memory = await memoryRes.json();
+        const voicesPayload = await voicesRes.json();
+        updateMemory(memory);
+        if (voicesPayload.ok) {
+          renderVoices(voicesPayload.voices || []);
+        }
+      } catch (err) {
+        console.error(err);
+        els.healthStamp.textContent = "Service connection failed";
+      }
+    }
+
+    async function runTTS() {
+      els.ttsRunBtn.disabled = true;
+      els.ttsStatus.textContent = "Generating...";
+      try {
+        const payload = {
+          text: els.ttsText.value,
+          voice_name: els.voiceSelect.value || "default",
+          main_model_precision: els.mainModelPrecision.value || "fp16",
+          temperature: Number(els.ttsTemperature.value),
+          repetition_penalty: Number(els.ttsRepetitionPenalty.value),
+          decoder_precision: els.ttsDecoder.value,
+          max_new_tokens: Number(els.ttsMaxTokens.value),
+        };
+        const res = await fetch("/api/tts", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          throw new Error(data.detail || "TTS request failed");
+        }
+        els.ttsPlayer.src = `${data.audio_url}?t=${Date.now()}`;
+        updateMemory(data.service_memory);
+        els.details.textContent = JSON.stringify(data, null, 2);
+        els.ttsStatus.textContent = `Generated with voice: ${data.voice.name}`;
+      } catch (err) {
+        els.ttsStatus.textContent = "Generation failed";
+        els.details.textContent = String(err);
+      } finally {
+        els.ttsRunBtn.disabled = false;
+      }
+    }
+
+    async function registerByUpload() {
+      if (!els.voiceName.value.trim()) {
+        els.registerStatus.textContent = "Enter a voice name first";
+        return;
+      }
+      if (!els.voiceFile.files.length) {
+        els.registerStatus.textContent = "Choose a reference audio file first";
+        return;
+      }
+      els.uploadBtn.disabled = true;
+      els.registerStatus.textContent = "Registering uploaded voice...";
+      try {
+        const form = new FormData();
+        form.append("name", els.voiceName.value.trim());
+        form.append("overwrite", "false");
+        form.append("audio", els.voiceFile.files[0]);
+        const res = await fetch("/api/voices/register-upload", { method: "POST", body: form });
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          throw new Error(data.detail || "register upload failed");
+        }
+        renderVoices(data.voices || []);
+        els.voiceSelect.value = data.voice.name;
+        updateMemory(data.service_memory);
+        els.details.textContent = JSON.stringify(data, null, 2);
+        els.registerStatus.textContent = `Registered voice: ${data.voice.name}`;
+      } catch (err) {
+        els.registerStatus.textContent = "Registration failed";
+        els.details.textContent = String(err);
+      } finally {
+        els.uploadBtn.disabled = false;
+      }
+    }
+
+    async function registerByPath() {
+      if (!els.voiceName.value.trim()) {
+        els.registerStatus.textContent = "Enter a voice name first";
+        return;
+      }
+      if (!els.voicePath.value.trim()) {
+        els.registerStatus.textContent = "Enter a local audio path first";
+        return;
+      }
+      els.pathBtn.disabled = true;
+      els.registerStatus.textContent = "Registering local path...";
+      try {
+        const payload = {
+          name: els.voiceName.value.trim(),
+          audio_path: els.voicePath.value.trim(),
+          overwrite: false,
+        };
+        const res = await fetch("/api/voices/register-path", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(payload),
+        });
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          throw new Error(data.detail || "register path failed");
+        }
+        renderVoices(data.voices || []);
+        els.voiceSelect.value = data.voice.name;
+        updateMemory(data.service_memory);
+        els.details.textContent = JSON.stringify(data, null, 2);
+        els.registerStatus.textContent = `Registered voice: ${data.voice.name}`;
+      } catch (err) {
+        els.registerStatus.textContent = "Registration failed";
+        els.details.textContent = String(err);
+      } finally {
+        els.pathBtn.disabled = false;
+      }
+    }
+
+    async function runASR() {
+      const audioFile = recordedAsrFile || (els.asrFile.files && els.asrFile.files[0]);
+      if (!audioFile) {
+        els.asrStatus.textContent = "Upload audio or record a short clip first";
+        return;
+      }
+      els.asrRunBtn.disabled = true;
+      els.asrStatus.textContent = "Transcribing...";
+      try {
+        const form = new FormData();
+        form.append("audio", audioFile);
+        form.append("begin_time", els.beginTime.value);
+        form.append("end_time", els.endTime.value);
+        form.append("max_audio_seconds", els.maxAudioSeconds.value);
+        form.append("max_new_tokens", els.asrMaxTokens.value);
+        form.append("main_model_precision", els.mainModelPrecision.value || "fp16");
+        const res = await fetch("/api/asr", { method: "POST", body: form });
+        const data = await res.json();
+        if (!res.ok || !data.ok) {
+          throw new Error(data.detail || "ASR request failed");
+        }
+        els.asrText.value = data.text || "";
+        updateMemory(data.service_memory);
+        els.details.textContent = JSON.stringify(data, null, 2);
+        els.asrStatus.textContent = "Transcription complete";
+      } catch (err) {
+        els.asrStatus.textContent = "Transcription failed";
+        els.details.textContent = String(err);
+      } finally {
+        els.asrRunBtn.disabled = false;
+      }
+    }
+
+    async function loadSampleAudio() {
+      recordedAsrFile = null;
+      revokeAsrBlobUrl();
+      const sampleUrl = `/samples/sample.mp3?t=${Date.now()}`;
+      try {
+        const resp = await fetch(sampleUrl, { method: "HEAD" });
+        if (!resp.ok) {
+          throw new Error("No bundled sample audio is available in /samples/sample.mp3");
+        }
+      } catch (err) {
+        els.asrStatus.textContent = "No bundled sample audio is available";
+        els.asrText.value = "Add a file to /samples/sample.mp3 if you want to use the bundled sample loader.";
+        els.details.textContent = String(err);
+        return;
+      }
+      els.asrPreview.src = sampleUrl;
+      els.asrText.value = "The bundled sample is loaded into the player. Upload the same file if you want to submit it for transcription.";
+      els.asrStatus.textContent = "Bundled sample loaded";
+    }
+
+    els.voiceFile.addEventListener("change", () => setAudioPreview(els.voiceFile, els.voicePreview));
+    els.asrFile.addEventListener("change", () => setAudioPreview(els.asrFile, els.asrPreview));
+    els.recordStartBtn.addEventListener("click", startRecording);
+    els.recordStopBtn.addEventListener("click", stopRecording);
+    els.ttsRunBtn.addEventListener("click", runTTS);
+    els.refreshBtn.addEventListener("click", refreshState);
+    els.uploadBtn.addEventListener("click", registerByUpload);
+    els.pathBtn.addEventListener("click", registerByPath);
+    els.asrRunBtn.addEventListener("click", runASR);
+    els.loadSampleBtn.addEventListener("click", loadSampleAudio);
+    refreshState();
+    setInterval(refreshState, 3000);
+  </script>
+</body>
+</html>
