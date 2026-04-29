@@ -1,12 +1,12 @@
 # GPA v1.5
 
-> **TL;DR** This directory is the code home for GPA v1.5 training and native inference workflows. Start with [docs/train.md](docs/train.md) for fine-tuning or [docs/infer.md](docs/infer.md) for native PyTorch inference.
+> **TL;DR** This directory is the code home for GPA v1.5 training, native inference, and ONNX runtime workflows. Start with [docs/train.md](docs/train.md) for fine-tuning, [docs/infer.md](docs/infer.md) for native PyTorch inference, or [onnx_runtime/README.md](onnx_runtime/README.md) for ONNX CLI/service deployment.
 
 GPA v1.5 contains 3 tracks:
 
 - **Native train** for fine-tuning and continued training GPA-v1.5 with Hugging Face `Trainer`.
 - **Native infer** for direct Hugging Face and PyTorch execution of GPA-v1.5's inference.
-- **ONNX runtime(Coming Soon)** enable seamless inference for ONNX-formatted models — available as a hosted service or local CLI toolkit.
+- **ONNX runtime** for local CLI inference, FastAPI service deployment, browser UI testing, and runtime-focused validation.
 
 ## 📥 Download Index
 
@@ -18,10 +18,20 @@ Large model assets are hosted separately from this code tree. Download the GPA v
 | :--- | :--- | :---: |
 | **🤗 GPA-v1.5 Hugging Face checkpoint** | `GPA-v1.5-HF/GPA-v1.5` | **[Download →](https://huggingface.co/AutoArk-AI/GPA-v1.5)** |
 | **🎙️ Spark tokenizer assets** | `GPA-v1.5-HF/GPA-v1.5/spark_tokenizer_model` | Included in the checkpoint |
+| **⚙️ GPA-v1.5 ONNX runtime assets** | `GPA-v1.5-HF/GPA-v1.5-onnx-runtime` | **[Download →](https://huggingface.co/AutoArk-AI/GPA-v1.5-onnx-runtime)** |
 
 </div>
 
-> **💡 Tip**: Keep the downloaded files together. Native train and native infer both auto-discover the model and Spark tokenizer when this layout is preserved.
+> **💡 Recommended placement**: Create one local asset folder named `GPA-v1.5-HF/`, then put the downloaded Hugging Face repos inside it exactly like this:
+>
+> ```text
+> GPA-v1.5-HF/
+> ├── GPA-v1.5/
+> │   └── spark_tokenizer_model/
+> └── GPA-v1.5-onnx-runtime/
+> ```
+>
+> With this layout, native train/infer can find `GPA-v1.5/` and its `spark_tokenizer_model/`, and ONNX runtime can find `GPA-v1.5-onnx-runtime/` without extra environment variables.
 
 ## 🚀 Where To Start
 
@@ -31,24 +41,28 @@ Choose the path that matches your goal:
 [docs/train.md](docs/train.md)
 - **I want the direct model behavior baseline:**
 [docs/infer.md](docs/infer.md)
+- **I want ONNX CLI inference, FastAPI service, or the browser UI:**
+[onnx_runtime/README.md](onnx_runtime/README.md)
 
 ## 🧭 Recommended Local Layout
 
-This repo does not bundle the large model assets directly. The expected local sibling layout is:
+This repo does not bundle the large model assets directly. For the least configuration, keep the downloaded checkpoint repos side by side:
 
 ```text
 GPA-v1.5/
 GPA-v1.5-HF/
   GPA-v1.5/
     spark_tokenizer_model/
+  GPA-v1.5-onnx-runtime/
 ```
 
-With that layout in place:
+What each path is used for:
 
-- native infer automatically discovers `GPA-v1.5-HF/GPA-v1.5`
-- native infer automatically discovers `GPA-v1.5-HF/GPA-v1.5/spark_tokenizer_model`
+- `GPA-v1.5-HF/GPA-v1.5`: native PyTorch train/infer Hugging Face checkpoint
+- `GPA-v1.5-HF/GPA-v1.5/spark_tokenizer_model`: Spark tokenizer assets used by native TTS
+- `GPA-v1.5-HF/GPA-v1.5-onnx-runtime`: ONNX CLI/service/browser UI asset bundle
 
-That means most local smoke tests can run without editing code or exporting extra variables.
+That means the smoke tests in [docs/infer.md](docs/infer.md), [docs/train.md](docs/train.md), and [onnx_runtime/README.md](onnx_runtime/README.md) can run without editing source paths.
 
 If your assets live elsewhere, use CLI flags or environment variables instead of modifying the source tree.
 
@@ -77,8 +91,11 @@ If your assets live elsewhere, use CLI flags or environment variables instead of
   User-facing guides for this directory.
 - `spark_tokenizer_runtime/`
   Spark tokenizer and detokenizer support used by native TTS paths.
+- `onnx_runtime/`
+  ONNX inference scripts, FastAPI service, browser UI, voice registration, export/quantization scripts, and runtime validation tools.
 
 ## 📖 Documentation Map
 
 - **Training guide**: [docs/train.md](docs/train.md)
 - **Native infer guide**: [docs/infer.md](docs/infer.md)
+- **ONNX runtime guide**: [onnx_runtime/README.md](onnx_runtime/README.md)
