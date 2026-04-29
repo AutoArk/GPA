@@ -35,7 +35,7 @@
 <br>
 
 <div align="center" style="margin: 22px 0 28px;">
-  <video src="docs/tiny.mp4" width="85%" controls loop playsinline style="border: 1px solid #e5e7eb; border-radius: 8px;"></video>
+  <video src="https://github.com/user-attachments/assets/dbf223ef-4b64-40ca-bb50-4f3541ec0ffb" width="85%" controls loop playsinline style="border: 1px solid #e5e7eb; border-radius: 8px;"></video>
   <br>
   <sub>All in one, built for all.</sub>
   <br>
