@@ -238,6 +238,12 @@ To switch precision:
 
 ---
 
+## 🙏 Acknowledgements
+
+Special thanks to [@gh503](https://github.com/gh503) for reporting the missing GPA-TTS runtime dependency and sharing the fix in [Issue #19](https://github.com/AutoArk/GPA/issues/19).
+
+---
+
 ## 🔗 Related
 
 - **[GPA Main Repository](https://github.com/AutoArk/GPA)** — Unified model for ASR, TTS, and Voice Conversion
