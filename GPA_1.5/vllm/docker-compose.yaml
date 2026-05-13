@@ -8,7 +8,7 @@ services:
       - "${GPA15_VLLM_PORT:-18080}:8000"
     environment:
       CUDA_VISIBLE_DEVICES: "${CUDA_VISIBLE_DEVICES:-0}"
-      PYTHONPATH: /workspace/GPA
+      PYTHONPATH: /workspace/GPA:/workspace/GPA/GPA_1.5/vllm
       GPA_MODEL_PATH: /models/GPA-v1_5-0_6B
       GPA_BICODEC_PATH: /models/BiCodec
       GPA_TTS_DEVICE: "${GPA_TTS_DEVICE:-cuda}"

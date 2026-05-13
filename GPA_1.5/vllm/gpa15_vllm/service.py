@@ -25,7 +25,7 @@ from vllm.engine.arg_utils import AsyncEngineArgs
 from models.bicodec_tokenizer.spark_detokenizer import SparkDeTokenizer
 from models.bicodec_tokenizer.spark_tokenizer import SparkTokenizer
 
-_GPA15_DIR = Path(__file__).resolve().parent.parent / "GPA_1.5"
+_GPA15_DIR = Path(__file__).resolve().parents[2]
 if str(_GPA15_DIR) not in sys.path:
     sys.path.append(str(_GPA15_DIR))
 from tts_han_char_tokenizer import encode_tts_content_text
