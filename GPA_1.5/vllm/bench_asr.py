@@ -23,13 +23,29 @@ async def post_once(
     url: str,
     audio_path: Path,
     timeout: float,
+    mode: str,
+    text: str,
 ) -> dict[str, Any]:
     started = time.perf_counter()
     with audio_path.open("rb") as f:
-        files = {"file": (audio_path.name, f, "application/octet-stream")}
-        resp = await client.post(url, files=files, timeout=timeout)
+        if mode == "tts":
+            files = {"ref_file": (audio_path.name, f, "application/octet-stream")}
+            data = {"text": text}
+        else:
+            files = {"file": (audio_path.name, f, "application/octet-stream")}
+            data = None
+        resp = await client.post(url, data=data, files=files, timeout=timeout)
     elapsed = time.perf_counter() - started
     resp.raise_for_status()
+    if mode == "tts":
+        return {
+            "latency_s": elapsed,
+            "server_latency_s": resp.headers.get("x-gpa-latency-s"),
+            "prompt_tokens": resp.headers.get("x-gpa-prompt-tokens"),
+            "semantic_tokens": resp.headers.get("x-gpa-semantic-tokens"),
+            "audio_bytes": len(resp.content),
+            "text": "",
+        }
     data = resp.json()
     return {
         "latency_s": elapsed,
@@ -46,7 +62,7 @@ async def run(args: argparse.Namespace) -> None:
 
     async with httpx.AsyncClient(trust_env=False) as client:
         for _ in range(args.warmup):
-            await post_once(client, args.url, audio_path, args.timeout)
+            await post_once(client, args.url, audio_path, args.timeout, args.mode, args.text)
 
         sem = asyncio.Semaphore(args.concurrency)
         results: list[dict[str, Any]] = []
@@ -55,7 +71,7 @@ async def run(args: argparse.Namespace) -> None:
         async def worker(_: int) -> None:
             async with sem:
                 try:
-                    results.append(await post_once(client, args.url, audio_path, args.timeout))
+                    results.append(await post_once(client, args.url, audio_path, args.timeout, args.mode, args.text))
                 except Exception as exc:
                     errors.append(repr(exc))
 
@@ -94,6 +110,12 @@ async def run(args: argparse.Namespace) -> None:
         )
     if results:
         print(f"sample_text={results[0].get('text', '')[:200]}")
+        if args.mode == "tts":
+            print(
+                "sample_tts "
+                f"audio_bytes={results[0].get('audio_bytes')} "
+                f"semantic_tokens={results[0].get('semantic_tokens')}"
+            )
     if errors:
         print("first_error=" + errors[0])
 
@@ -101,7 +123,9 @@ async def run(args: argparse.Namespace) -> None:
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Benchmark GPA 1.5 vLLM ASR latency/concurrency")
     parser.add_argument("--url", default="http://127.0.0.1:18080/asr")
+    parser.add_argument("--mode", choices=["asr", "tts"], default="asr")
     parser.add_argument("--audio", required=True)
+    parser.add_argument("--text", default="你好，世界。")
     parser.add_argument("--requests", type=int, default=16)
     parser.add_argument("--concurrency", type=int, default=4)
     parser.add_argument("--warmup", type=int, default=2)

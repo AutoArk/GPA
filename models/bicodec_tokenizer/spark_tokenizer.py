@@ -43,11 +43,15 @@ class SparkTokenizer:
 
         # 2. 加载模型
         wav2vec_path = self.model_dir / "wav2vec2-large-xlsr-53"
-        self.processor = Wav2Vec2FeatureExtractor.from_pretrained(wav2vec_path)
+        self.processor = Wav2Vec2FeatureExtractor.from_pretrained(
+            wav2vec_path,
+            local_files_only=True,
+        )
         self.feature_extractor = Wav2Vec2Model.from_pretrained(
             wav2vec_path,
             attn_implementation=attn_implementation,
-            torch_dtype=self.dtype 
+            torch_dtype=self.dtype,
+            local_files_only=True,
         )
         self.feature_extractor.config.output_hidden_states = True
         self.feature_extractor.to(self.device)

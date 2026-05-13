@@ -10,6 +10,9 @@ services:
       CUDA_VISIBLE_DEVICES: "${CUDA_VISIBLE_DEVICES:-0}"
       PYTHONPATH: /workspace/GPA
       GPA_MODEL_PATH: /models/GPA-v1_5-0_6B
+      GPA_BICODEC_PATH: /models/BiCodec
+      GPA_TTS_DEVICE: "${GPA_TTS_DEVICE:-cuda}"
+      GPA_TTS_MAX_NEW_TOKENS: "${GPA_TTS_MAX_NEW_TOKENS:-1024}"
       VLLM_CONFIG_FORMAT: arkasr
       VLLM_DTYPE: "${VLLM_DTYPE:-bfloat16}"
       VLLM_GPU_MEMORY_UTILIZATION: "${VLLM_GPU_MEMORY_UTILIZATION:-0.85}"
@@ -27,6 +30,7 @@ services:
     volumes:
       - /data3/yiming/GPA:/workspace/GPA
       - /data2/model/AutoArk/GPA-v1_5-0_6B:/models/GPA-v1_5-0_6B:ro
+      - /data2/model/AutoArk/GPA/BiCodec:/models/BiCodec:ro
     deploy:
       resources:
         reservations:
