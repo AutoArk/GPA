@@ -1,0 +1,45 @@
+services:
+  gpa15-vllm:
+    image: "${GPA15_VLLM_IMAGE:-vllm/vllm-omni:v0.18.0}"
+    container_name: gpa15-vllm
+    shm_size: "16gb"
+    ipc: host
+    ports:
+      - "${GPA15_VLLM_PORT:-18080}:8000"
+    environment:
+      CUDA_VISIBLE_DEVICES: "${CUDA_VISIBLE_DEVICES:-0}"
+      PYTHONPATH: /workspace/GPA:/workspace/GPA/GPA_1.5/vllm
+      GPA_MODEL_PATH: /models/GPA-v1_5-0_6B
+      GPA_BICODEC_PATH: /models/BiCodec
+      GPA_TTS_DEVICE: "${GPA_TTS_DEVICE:-cuda}"
+      GPA_TTS_MAX_NEW_TOKENS: "${GPA_TTS_MAX_NEW_TOKENS:-1024}"
+      VLLM_CONFIG_FORMAT: arkasr
+      VLLM_DTYPE: "${VLLM_DTYPE:-bfloat16}"
+      VLLM_GPU_MEMORY_UTILIZATION: "${VLLM_GPU_MEMORY_UTILIZATION:-0.85}"
+      VLLM_MAX_MODEL_LEN: "${VLLM_MAX_MODEL_LEN:-8192}"
+      VLLM_MAX_NUM_SEQS: "${VLLM_MAX_NUM_SEQS:-16}"
+      VLLM_MAX_NUM_BATCHED_TOKENS: "${VLLM_MAX_NUM_BATCHED_TOKENS:-16384}"
+      VLLM_TENSOR_PARALLEL_SIZE: "${VLLM_TENSOR_PARALLEL_SIZE:-1}"
+      VLLM_WORKER_MULTIPROC_METHOD: fork
+      GPA_MAX_AUDIO_SECONDS: "${GPA_MAX_AUDIO_SECONDS:-30}"
+      HF_HOME: /tmp/huggingface
+      HF_MODULES_CACHE: /tmp/huggingface/modules
+      HF_HUB_OFFLINE: "1"
+      TRANSFORMERS_OFFLINE: "1"
+      HF_DATASETS_OFFLINE: "1"
+    volumes:
+      - /data3/yiming/GPA:/workspace/GPA
+      - /data2/model/AutoArk/GPA-v1_5-0_6B:/models/GPA-v1_5-0_6B:ro
+      - /data2/model/AutoArk/GPA/BiCodec:/models/BiCodec:ro
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    command: >
+      python -m gpa15_vllm.service
+      --model /models/GPA-v1_5-0_6B
+      --host 0.0.0.0
+      --port 8000
