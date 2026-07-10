@@ -213,8 +213,27 @@ python GPA-v1.5/infer.py \
   --device cpu
 ```
 
-The CLI chooses the attention backend conservatively:
+If the reason you're troubleshooting is a `flash_attention_2` import error on a CUDA GPU (see the [Tesla T4 / Turing notes](#-tesla-t4--turing-sm_75-notes) below), you don't need to give up the GPU — pass `--attn-impl sdpa` instead and keep `--device cuda`.
 
-- `flash_attention_2` on CUDA when available
+By default (`--attn-impl auto`), the CLI picks:
+
+- `flash_attention_2` whenever `--device` starts with `cuda` — **regardless of GPU generation or whether the `flash-attn` package is even installed**
 - `sdpa` on MPS
 - `eager` on CPU
+
+## 🖥️ Tesla T4 / Turing (sm_75) Notes
+
+Measured on a real Tesla T4 16GB (driver 550.163.01 / CUDA 12.4, torch 2.6.0+cu124, transformers 5.13.0). These notes apply to any Turing-class GPU (T4, and similarly L4-class cards without `flash-attn` support).
+
+- **`--attn-impl auto` crashes on Turing GPUs.** `inference/model_loader.py::normalize_attn_impl` returns `flash_attention_2` for any `cuda*` device with no check of `torch.cuda.get_device_capability()` and no check that the `flash-attn` package is installed (it isn't listed in `requirements.txt`, and `pyproject.toml` only has it commented out as an optional extra). On T4 (sm_75), the Quick Start commands above fail at model-load time with:
+  ```
+  ImportError: FlashAttention2 has been toggled on, but it cannot be used due to the following error:
+  the package for FlashAttention2 doesn't seem to be installed.
+  ```
+  `flash-attn` v2 also requires sm80+ in general, so it would not help on T4 even if installed. **Fix:** explicitly pass `--attn-impl sdpa` — this is already a supported CLI value, no code change needed, and both ASR and TTS complete normally.
+
+- **There is no `--dtype` CLI flag.** `--device` and `--attn-impl` are exposed as CLI options, but dtype is hardcoded in `model_loader.py` (`torch.bfloat16` on CUDA, otherwise the model default). Changing it requires editing `load_text_stack()` directly. On T4, this hardcoded `bf16` is measurably suboptimal with SDPA: PyTorch's `EFFICIENT_ATTENTION` kernel rejects `bfloat16` inputs and silently falls back to the slower `MATH` backend, whereas `fp16` is accepted by `EFFICIENT_ATTENTION` directly. Per-token generation time was within noise between the two in our runs (bf16 ≈36.6–37.2 ms/token vs fp16 ≈34.2–39.4 ms/token), but only `fp16` reaches the faster kernel path on this GPU class.
+
+- **`bitsandbytes` int8 quantization works, but is a real trade-off, not a free win.** Passing `quantization_config=BitsAndBytesConfig(load_in_8bit=True)` to `AutoModelForCausalLM.from_pretrained` (not currently mentioned anywhere in the docs) reduces peak VRAM after load by **~43%** (2317 MB → 1327 MB bf16→int8, reproduced twice), but batch=1 autoregressive decode is **~3.2x slower** (≈36–39 ms/token bf16/fp16 → ≈121–125 ms/token int8, reproduced twice). Whether this trade is worth it depends on whether you're VRAM-constrained or latency-constrained.
+
+- **VRAM headroom on T4 is not a concern for this model.** GPA-v1.5's native infer path uses a 0.6B `ArkAsr` backbone. Full-pipeline peak VRAM (LLM + ASR/TTS + Spark tokenizer) measured ≈4.0–4.2 GB for bf16/fp16 and ≈3.0–3.1 GB for int8 — roughly 74–81% of a T4's 16GB left unused. Unlike larger models, OOM is not a practical risk here on T4-class hardware.
