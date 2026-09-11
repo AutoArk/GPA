@@ -217,23 +217,30 @@ If the reason you're troubleshooting is a `flash_attention_2` import error on a 
 
 By default (`--attn-impl auto`), the CLI picks:
 
-- `flash_attention_2` whenever `--device` starts with `cuda` — **regardless of GPU generation or whether the `flash-attn` package is even installed**
+- `flash_attention_2` whenever `--device` starts with `cuda` — without checking the GPU's compute capability or whether the `flash-attn` package is installed
 - `sdpa` on MPS
 - `eager` on CPU
 
 ## 🖥️ Tesla T4 / Turing (sm_75) Notes
 
-Measured on a real Tesla T4 16GB (driver 550.163.01 / CUDA 12.4, torch 2.6.0+cu124, transformers 5.13.0). These notes apply to any Turing-class GPU (T4, and similarly L4-class cards without `flash-attn` support).
+All numbers below were measured on one machine: a Tesla T4 16GB (driver 550.163.01 / CUDA 12.4, torch 2.6.0+cu124, transformers 5.13.0) running the Quick Start ASR and TTS commands. Treat them as a data point for that setup, not as figures that carry over to other GPUs, other software versions, or other workloads.
 
-- **`--attn-impl auto` crashes on Turing GPUs.** `inference/model_loader.py::normalize_attn_impl` returns `flash_attention_2` for any `cuda*` device with no check of `torch.cuda.get_device_capability()` and no check that the `flash-attn` package is installed (it isn't listed in `requirements.txt`, and `pyproject.toml` only has it commented out as an optional extra). On T4 (sm_75), the Quick Start commands above fail at model-load time with:
+`--attn-impl auto` can fail on CUDA for two independent reasons. The first is not specific to Turing:
+
+- **`flash-attn` is not installed by default, on any CUDA GPU.** `inference/model_loader.py::normalize_attn_impl` returns `flash_attention_2` for any `cuda*` device without checking whether the package is present. It is not in `requirements.txt`, and in `pyproject.toml` the `"flash-attn"` entry is commented out of `dependencies`; the `[tool.uv.extra-build-dependencies]` section only declares what `flash-attn` needs in order to build, so it does not install it or expose it as an extra. Without a separate `pip install flash-attn`, the Quick Start commands fail at model-load time on any CUDA GPU with:
   ```
   ImportError: FlashAttention2 has been toggled on, but it cannot be used due to the following error:
   the package for FlashAttention2 doesn't seem to be installed.
   ```
-  `flash-attn` v2 also requires sm80+ in general, so it would not help on T4 even if installed. **Fix:** explicitly pass `--attn-impl sdpa` — this is already a supported CLI value, no code change needed, and both ASR and TTS complete normally.
 
-- **There is no `--dtype` CLI flag.** `--device` and `--attn-impl` are exposed as CLI options, but dtype is hardcoded in `model_loader.py` (`torch.bfloat16` on CUDA, otherwise the model default). Changing it requires editing `load_text_stack()` directly. On T4, this hardcoded `bf16` is measurably suboptimal with SDPA: PyTorch's `EFFICIENT_ATTENTION` kernel rejects `bfloat16` inputs and silently falls back to the slower `MATH` backend, whereas `fp16` is accepted by `EFFICIENT_ATTENTION` directly. Per-token generation time was within noise between the two in our runs (bf16 ≈36.6–37.2 ms/token vs fp16 ≈34.2–39.4 ms/token), but only `fp16` reaches the faster kernel path on this GPU class.
+- **On Turing (sm_75), installing it does not help.** The official FlashAttention 2 implementation requires sm80+, so `flash_attention_2` is unavailable on a T4 even after `flash-attn` is installed successfully. This is the Turing-specific half of the problem, and it is why installing the package is not the fix here.
 
-- **`bitsandbytes` int8 quantization works, but is a real trade-off, not a free win.** Passing `quantization_config=BitsAndBytesConfig(load_in_8bit=True)` to `AutoModelForCausalLM.from_pretrained` (not currently mentioned anywhere in the docs) reduces peak VRAM after load by **~43%** (2317 MB → 1327 MB bf16→int8, reproduced twice), but batch=1 autoregressive decode is **~3.2x slower** (≈36–39 ms/token bf16/fp16 → ≈121–125 ms/token int8, reproduced twice). Whether this trade is worth it depends on whether you're VRAM-constrained or latency-constrained.
+**Fix for both cases:** pass `--attn-impl sdpa` explicitly. It is already a supported CLI value, needs no code change, and both ASR and TTS complete normally.
 
-- **VRAM headroom on T4 is not a concern for this model.** GPA-v1.5's native infer path uses a 0.6B `ArkAsr` backbone. Full-pipeline peak VRAM (LLM + ASR/TTS + Spark tokenizer) measured ≈4.0–4.2 GB for bf16/fp16 and ≈3.0–3.1 GB for int8 — roughly 74–81% of a T4's 16GB left unused. Unlike larger models, OOM is not a practical risk here on T4-class hardware.
+Three further observations from the same T4 runs:
+
+- **There is no `--dtype` CLI flag.** `--device` and `--attn-impl` are exposed as CLI options, but dtype is hardcoded in `model_loader.py` (`torch.bfloat16` on CUDA, otherwise the model default), so changing it means editing `load_text_stack()` directly. That matters on this GPU because PyTorch's `EFFICIENT_ATTENTION` SDPA kernel rejects `bfloat16` inputs and falls back to the slower `MATH` backend, while `fp16` is accepted by `EFFICIENT_ATTENTION` directly. Per-token generation time was within noise between the two on this machine (bf16 ≈36.6–37.2 ms/token vs fp16 ≈34.2–39.4 ms/token), so the kernel difference did not translate into a measurable speedup in these runs.
+
+- **`bitsandbytes` int8 quantization works, but is a trade-off.** Passing `quantization_config=BitsAndBytesConfig(load_in_8bit=True)` to `AutoModelForCausalLM.from_pretrained` (not currently mentioned anywhere in the docs) reduced peak VRAM after load by ~43% on this machine (2317 MB → 1327 MB bf16→int8, reproduced twice), while batch=1 autoregressive decode was ~3.2x slower (≈36–39 ms/token bf16/fp16 → ≈121–125 ms/token int8, reproduced twice). Whether that trade is worth taking depends on whether you are VRAM-constrained or latency-constrained.
+
+- **VRAM was not the limiting factor in these runs.** GPA-v1.5's native infer path uses a 0.6B `ArkAsr` backbone. Full-pipeline peak VRAM (LLM + ASR/TTS + Spark tokenizer) measured ≈4.0–4.2 GB for bf16/fp16 and ≈3.0–3.1 GB for int8 on the Quick Start workload, leaving most of the T4's 16GB unused. Longer inputs, batching, or a different model size would change this.
